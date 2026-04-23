@@ -528,7 +528,11 @@ function processTutorialDetection(lm, sd) {
     let hit=false;
     if(step.id==='run')    hit=sd>0.012;
     if(step.id==='jump'){  const kY=(lm[25].y+lm[26].y)/2,sY=(lm[11].y+lm[12].y)/2; hit=(kY-sY)<0.25; }
-    if(step.id==='crouch'){ const sY=(lm[11].y+lm[12].y)/2; hit=baseShoulderY&&(sY-baseShoulderY)>0.12; }
+    if(step.id==='crouch'){ 
+        const sY=(lm[11].y+lm[12].y)/2; 
+        if(!baseShoulderY) baseShoulderY = sY; // Establecer base temporal si no hay calibración
+        hit=(sY-baseShoulderY)>0.12; 
+    }
     if(step.id==='kick'){  const l=lm[23].y-lm[25].y,r=lm[24].y-lm[26].y; hit=l>0.15||r>0.15; }
     if(step.id==='punch'){ const l=lm[13].y-lm[15].y,r=lm[14].y-lm[16].y; hit=l>0.18||r>0.18; }
     tutDetectProgress=Math.min(Math.max(tutDetectProgress+(hit?8:-3),0),100);
@@ -897,6 +901,8 @@ pose.onResults(results => {
     if (lastAnkleY    !== 0) rawDelta += Math.abs(ankleY    - lastAnkleY)    * 1.5;
     if (lastShoulderY !== 0) rawDelta += Math.abs(shoulderY - lastShoulderY) * 1.2;
     smoothedDelta = smoothedDelta * 0.75 + rawDelta * 0.25;
+    lastAnkleY    = ankleY;
+    lastShoulderY = shoulderY;
 
     // Tutorial: procesar con smoothedDelta ya calculado
     if (isTutorialActive) { processTutorialDetection(lm, smoothedDelta); return; }
@@ -921,9 +927,6 @@ pose.onResults(results => {
         }
     }
     speedFill.style.height = Math.min(speed/maxSpd*100, 100) + '%';
-    lastAnkleY    = ankleY;
-    lastShoulderY = shoulderY;
-
     const now = Date.now();
 
     // ── 2. AGACHARSE ──
