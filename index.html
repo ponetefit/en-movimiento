@@ -3,727 +3,1320 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emoji AI Runner - Versión Original</title>
+    <title>Ponete Fit en Movimiento</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <style>
         body { margin: 0; overflow: hidden; background: #0a0a0f; font-family: system-ui, -apple-system, sans-serif; }
         canvas { display: block; width: 100vw; height: 100vh; background: #0a0a0f; }
-        #video-container { position: absolute; bottom: 20px; right: 20px; width: 200px; height: 150px; border: 2px solid #444; border-radius: 10px; overflow: hidden; transform: scaleX(-1); z-index: 500; background: #000; }
+        #video-container { position: absolute; top: 80px; left: 20px; width: 120px; height: 90px; border: 2px solid #444; border-radius: 10px; overflow: hidden; transform: scaleX(-1); z-index: 500; background: #000; opacity: 0.75; }
         #video-preview { width: 100%; height: 100%; object-fit: cover; display: block; }
         #skeleton-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; background: transparent; }
         #ui { position: absolute; top: 20px; left: 20px; z-index: 10; display: none; }
-        .stat-card { background: rgba(20, 20, 30, 0.85); padding: 15px 25px; border-radius: 12px; shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid #333; color: white; backdrop-filter: blur(5px); }
+        .stat-card { background: rgba(20,20,30,0.85); padding: 15px 25px; border-radius: 12px; border: 1px solid #333; color: white; backdrop-filter: blur(5px); }
         #loading { position: fixed; inset: 0; background: #0a0a0f; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; color: white; }
         #game-over { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 200; color: white; text-align: center; }
-        
-        #start-screen { position: fixed; inset: 0; background: #0a0a0f; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 300; text-align: center; padding: 20px; color: white; }
+        #start-screen { position: fixed; inset: 0; background: #0a0a0f; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 300; text-align: center; padding: 20px; color: white; overflow-y: auto; }
+        #calibration-screen { position: fixed; inset: 0; background: rgba(10,10,15,0.97); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 450; color: white; text-align: center; }
         #countdown-screen { position: fixed; inset: 0; background: rgba(10,10,15,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 400; color: white; }
-        .btn-start { background: white; color: black; padding: 1.5rem 3rem; border-radius: 99px; font-weight: 800; font-size: 1.5rem; transition: all 0.3s; margin-top: 2rem; }
+        .btn-start { background: white; color: black; padding: 1.5rem 3rem; border-radius: 99px; font-weight: 800; font-size: 1.5rem; transition: all 0.3s; margin-top: 1.5rem; cursor: pointer; border: none; }
         .btn-start:hover { transform: scale(1.05); box-shadow: 0 0 30px rgba(255,255,255,0.2); }
-
-        /* Nivel Anuncio */
-        #level-announcement { position: fixed; top: 40%; left: 50%; transform: translate(-50%, -50%); color: white; text-align: center; z-index: 600; display: none; pointer-events: none; }
+        #level-announcement { position: fixed; top: 40%; left: 50%; transform: translate(-50%,-50%); color: white; text-align: center; z-index: 600; display: none; pointer-events: none; }
         .lvl-text { font-size: 5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 20px rgba(255,255,255,0.5); margin: 0; }
         .lvl-name { font-size: 2rem; color: #fbbf24; font-weight: 700; margin-top: -10px; }
-
-        /* Progreso y Vidas */
         #progress-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); width: 300px; height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); z-index: 1000; }
         #progress-bar { width: 0%; height: 100%; background: #4ade80; transition: width 0.3s; box-shadow: 0 0 10px #4ade80; }
         #lives-container { position: fixed; top: 20px; right: 240px; display: flex; gap: 8px; z-index: 1000; font-size: 1.8rem; }
-        .heart { filter: drop-shadow(0 0 5px rgba(255,0,0,0.5)); }
-        
-        .blink { animation: blinker 0.2s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
+        .heart { filter: drop-shadow(0 0 5px rgba(255,0,0,0.5)); transition: filter 0.3s; }
+        #powerup-bar { position: fixed; top: 52px; right: 240px; display: flex; gap: 6px; z-index: 1000; }
+        #combo-display { position: fixed; top: 45%; left: 50%; transform: translate(-50%,-50%); color: #fbbf24; font-size: 3rem; font-weight: 900; z-index: 700; display: none; pointer-events: none; text-shadow: 0 0 20px #f59e0b; }
+        @keyframes comboPop { 0%{transform:translate(-50%,-50%) scale(0.5)} 60%{transform:translate(-50%,-50%) scale(1.2)} 100%{transform:translate(-50%,-50%) scale(1)} }
+        #move-indicator { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.75); border: 2px solid #4ade80; border-radius: 16px; padding: 12px 28px; color: white; font-size: 1.4rem; font-weight: 800; z-index: 1000; display: none; text-align: center; min-width: 220px; transition: border-color 0.2s; backdrop-filter: blur(6px); }
+        #move-indicator.active { border-color: #fbbf24; color: #fbbf24; animation: pulseGlow 0.4s ease; }
+        @keyframes pulseGlow { 0%{box-shadow:0 0 0 rgba(251,191,36,0)} 50%{box-shadow:0 0 18px rgba(251,191,36,0.7)} 100%{box-shadow:0 0 0 rgba(251,191,36,0)} }
+        .move-guide { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 1rem; text-align: left; }
+        .move-item { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+        .move-icon { font-size: 1.8rem; }
+        .move-desc { font-size: 0.8rem; color: #d1d5db; }
+        .move-desc b { color: white; display: block; font-size: 0.95rem; }
+        #calib-bar-outer { width: 320px; height: 18px; background: rgba(255,255,255,0.1); border-radius: 9px; border: 1px solid rgba(255,255,255,0.2); overflow: hidden; margin-top: 20px; }
+        #calib-bar-inner { height: 100%; width: 0%; background: #4ade80; transition: width 0.1s; box-shadow: 0 0 10px #4ade80; border-radius: 9px; }
+        #speed-bar { position: fixed; left: 20px; bottom: 90px; width: 12px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 6px; z-index: 1000; display: none; border: 1px solid rgba(255,255,255,0.2); overflow: hidden; }
+        #speed-fill { position: absolute; bottom: 0; left: 0; width: 100%; background: linear-gradient(to top, #4ade80, #fbbf24, #ef4444); border-radius: 6px; height: 0%; }
+        #speed-label { position: fixed; left: 12px; bottom: 80px; color: rgba(255,255,255,0.4); font-size: 0.65rem; z-index: 1000; display: none; }
+        #combo-counter { position: fixed; right: 30px; top: 50%; transform: translateY(-50%); text-align: center; z-index: 1000; display: none; pointer-events: none; }
+        #combo-counter .combo-num { font-size: 4rem; font-weight: 900; line-height: 1; color: white; text-shadow: 0 0 20px currentColor; }
+        #combo-counter .combo-label { font-size: 0.9rem; font-weight: 800; letter-spacing: 3px; color: rgba(255,255,255,0.6); text-transform: uppercase; }
+        @keyframes comboBump { 0%{transform:translateY(-50%) scale(1.5)} 100%{transform:translateY(-50%) scale(1)} }
+        #death-overlay { position: fixed; inset: 0; z-index: 190; pointer-events: none; display: none; }
+        @keyframes deathFlash { 0%{opacity:1} 100%{opacity:0} }
+
+        /* ── TUTORIAL ── */
+        #tutorial-screen { position:fixed; inset:0; background:rgba(10,10,15,0.97); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:460; color:white; text-align:center; padding:20px; }
+        .tut-move-box { background:rgba(255,255,255,0.06); border:2px solid rgba(255,255,255,0.15); border-radius:20px; padding:24px 32px; max-width:380px; width:100%; transition:border-color 0.3s; }
+        .tut-move-box.detected { border-color:#4ade80; background:rgba(74,222,128,0.1); }
+        #tut-progress { display:flex; gap:8px; justify-content:center; margin-bottom:24px; }
+        .tut-dot { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.2); transition:background 0.3s; }
+        .tut-dot.done { background:#4ade80; }
+        .tut-dot.active { background:#fbbf24; }
+        #tut-detect-bar-outer { width:100%; height:10px; background:rgba(255,255,255,0.1); border-radius:5px; overflow:hidden; margin-top:16px; }
+        #tut-detect-bar { height:100%; width:0%; background:#4ade80; border-radius:5px; transition:width 0.1s; }
+
+        /* ── SKIN SELECTOR ── */
+        #skin-screen { position:fixed; inset:0; background:rgba(10,10,15,0.97); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:310; color:white; text-align:center; padding:20px; }
+        .skin-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:20px 0; max-width:440px; }
+        .skin-card { background:rgba(255,255,255,0.06); border:2px solid rgba(255,255,255,0.12); border-radius:16px; padding:16px 8px; cursor:pointer; transition:all 0.2s; position:relative; }
+        .skin-card:hover { transform:scale(1.05); }
+        .skin-card.selected { border-color:#fbbf24; background:rgba(251,191,36,0.15); }
+        .skin-card.locked { opacity:0.4; cursor:not-allowed; }
+        .skin-card .skin-emoji { font-size:2.5rem; display:block; }
+        .skin-card .skin-name { font-size:0.7rem; color:#d1d5db; margin-top:4px; display:block; }
+        .skin-card .skin-req { font-size:0.6rem; color:#6b7280; display:block; }
+        .skin-lock { position:absolute; top:6px; right:8px; font-size:0.8rem; }
+
+        /* ── STATS ── */
+        .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0; max-width:400px; width:100%; }
+        .stat-box { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:14px; text-align:center; }
+        .stat-box .s-val { font-size:2rem; font-weight:900; display:block; }
+        .stat-box .s-lbl { font-size:0.7rem; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; }
+        .unlock-banner { background:rgba(251,191,36,0.15); border:1px solid #fbbf24; border-radius:12px; padding:10px 20px; color:#fbbf24; font-weight:800; margin:8px 0; display:none; }
     </style>
 </head>
 <body>
 
-    <div id="progress-container">
-        <div id="progress-bar"></div>
-    </div>
+<div id="progress-container"><div id="progress-bar"></div></div>
+<div id="lives-container">
+    <span class="heart" id="h1">❤️</span>
+    <span class="heart" id="h2">❤️</span>
+    <span class="heart" id="h3">❤️</span>
+</div>
+<div id="powerup-bar"></div>
+<div id="level-announcement">
+    <h2 class="lvl-text">¡NIVEL <span id="lvl-num">1</span>!</h2>
+    <p id="lvl-title" class="lvl-name">CIUDAD NOCTURNA</p>
+</div>
+<div id="combo-display"></div>
+<div id="move-indicator">🏃 Quieto</div>
+<div id="speed-bar"><div id="speed-fill"></div></div>
+<div id="speed-label">VEL</div>
 
-    <div id="lives-container">
-        <span class="heart" id="h1">❤️</span>
-        <span class="heart" id="h2">❤️</span>
-        <span class="heart" id="h3">❤️</span>
-    </div>
+<div id="combo-counter">
+    <div class="combo-num" id="combo-num">0</div>
+    <div class="combo-label">COMBO</div>
+</div>
+<div id="death-overlay"></div>
 
-    <div id="level-announcement">
-        <h2 class="lvl-text">¡NIVEL <span id="lvl-num">1</span>!</h2>
-        <p id="lvl-title" class="lvl-name">CIUDAD NOCTURNA</p>
+<div id="start-screen">
+    <div class="max-w-md w-full">
+        <div class="text-7xl mb-3">🌃</div>
+        <h1 class="text-4xl font-black mb-2 uppercase">Ponete Fit en Movimiento</h1>
+        <p class="text-lg text-gray-400 mb-1">Récord Actual: <b id="high-score-start" class="text-white">0</b>m</p>
+        <p class="text-gray-500 mb-3 uppercase text-xs tracking-widest">Pone el celular para que se te vea todo el cuerpo</p>
+        <div class="move-guide">
+            <div class="move-item"><span class="move-icon">🏃</span><div class="move-desc"><b>Correr</b>Movete en el lugar para avanzar</div></div>
+            <div class="move-item"><span class="move-icon">⬇️</span><div class="move-desc"><b>Agacharse</b>Bajate para esquivar pájaros y murciélagos</div></div>
+            <div class="move-item"><span class="move-icon">⬆️</span><div class="move-desc"><b>Saltar</b>Doblá las rodillas y saltá</div></div>
+            <div class="move-item"><span class="move-icon">🦶</span><div class="move-desc"><b>Patada</b>Levantá una rodilla bien arriba</div></div>
+            <div class="move-item"><span class="move-icon">👊</span><div class="move-desc"><b>Puñetazo</b>Extendé un brazo hacia adelante</div></div>
+            <div class="move-item"><span class="move-icon">💥</span><div class="move-desc"><b>COMBO</b>Patada + Puñetazo = destruye el obstáculo más cercano</div></div>
+        </div>
+        <p class="text-xs text-gray-600 mt-3">Power-ups: 🛡️ Escudo &nbsp;⚡ Turbo &nbsp;🪂 Doble Salto</p>
+        <button id="btn-comenzar" class="btn-start">EMPEZAR</button>
     </div>
+</div>
 
-    <div id="start-screen">
-        <div class="max-w-md">
-            <div class="text-8xl mb-6">🌃</div>
-            <h1 class="text-4xl font-black mb-4 uppercase">Night Runner</h1>
-            <p class="text-xl text-gray-400 mb-2">Récord Actual: <b id="high-score-start" class="text-white">0</b>m</p>
-            <p class="text-gray-500 mb-4 uppercase text-xs tracking-widest">Pone el celular para que se te vea todo el cuerpo</p>
-            <button id="btn-comenzar" class="btn-start">EMPEZAR</button>
+<!-- TUTORIAL -->
+<div id="tutorial-screen">
+    <h2 class="text-3xl font-black mb-1">TUTORIAL</h2>
+    <p class="text-gray-400 text-sm mb-5">Hacé cada movimiento para continuar</p>
+    <div id="tut-progress"></div>
+    <div class="tut-move-box" id="tut-box">
+        <div id="tut-emoji" class="text-6xl mb-3">🏃</div>
+        <div id="tut-title" class="text-2xl font-black mb-1">CORRER</div>
+        <div id="tut-desc" class="text-gray-400 text-sm mb-3">Movete en el lugar</div>
+        <div id="tut-detect-bar-outer"><div id="tut-detect-bar"></div></div>
+        <div id="tut-feedback" class="text-green-400 font-bold mt-3 h-6"></div>
+    </div>
+    <p class="text-gray-600 text-xs mt-5">Solo se muestra la primera vez</p>
+</div>
+
+<!-- SELECTOR DE SKIN -->
+<div id="skin-screen">
+    <div class="text-5xl mb-3">👟</div>
+    <h2 class="text-3xl font-black mb-1">ELEGÍ TU PERSONAJE</h2>
+    <p class="text-gray-500 text-sm mb-2">Desbloqueás más corriendo</p>
+    <div class="skin-grid" id="skin-grid"></div>
+    <button id="btn-skin-ok" class="btn-start" style="margin-top:0.5rem;padding:1rem 2.5rem;font-size:1.1rem">JUGAR →</button>
+</div>
+
+<!-- GAME OVER con stats -->
+<div id="game-over">
+    <h2 class="text-5xl font-black mb-3">¡FIN DEL JUEGO!</h2>
+    <p id="new-record-msg" class="text-xl text-yellow-400 font-bold mb-2" style="display:none">🏆 ¡NUEVO RÉCORD PERSONAL!</p>
+    <div id="unlock-banner" class="unlock-banner"></div>
+    <div class="stats-grid">
+        <div class="stat-box"><span class="s-val" id="final-dist">0</span><span class="s-lbl">Metros</span></div>
+        <div class="stat-box"><span class="s-val" id="stat-combo">0</span><span class="s-lbl">Combo Máx</span></div>
+        <div class="stat-box"><span class="s-val" id="stat-kicks">0</span><span class="s-lbl">Patadas</span></div>
+        <div class="stat-box"><span class="s-val" id="stat-punches">0</span><span class="s-lbl">Puñetazos</span></div>
+        <div class="stat-box"><span class="s-val" id="stat-jumps">0</span><span class="s-lbl">Saltos</span></div>
+        <div class="stat-box"><span class="s-val" id="stat-cals">0</span><span class="s-lbl">Cal. Est.</span></div>
+    </div>
+    <button onclick="location.reload()" class="bg-white text-black px-8 py-3 rounded-full font-bold text-xl hover:bg-gray-200 transition mt-4">REINTENTAR</button>
+</div>
+
+<div id="calibration-screen">
+    <div class="text-6xl mb-4">🧍</div>
+    <h2 class="text-3xl font-black mb-2">CALIBRANDO</h2>
+    <p class="text-gray-400 text-lg mb-1">Quedate quieto y parado derecho</p>
+    <p id="calib-status" class="text-yellow-400 font-bold text-xl mb-4">Detectando tu postura...</p>
+    <div id="calib-bar-outer"><div id="calib-bar-inner"></div></div>
+    <p class="text-gray-500 text-sm mt-4">Esto ajusta la detección a tu cuerpo y cámara</p>
+</div>
+
+<div id="countdown-screen">
+    <div id="countdown-number" class="text-[15rem] font-black text-white">3</div>
+    <p class="text-2xl font-bold text-gray-400 uppercase tracking-widest">¡Prepárate!</p>
+</div>
+
+<div id="loading">
+    <div class="text-6xl mb-4 animate-bounce">🏃</div>
+    <h1 class="text-2xl font-bold">CARGANDO IA...</h1>
+    <p class="text-gray-500">Ponte frente a la cámara</p>
+</div>
+
+<div id="game-over">
+    <h2 class="text-6xl font-black mb-4">¡FIN DEL JUEGO!</h2>
+    <p class="text-2xl mb-2">Distancia: <span id="final-dist">0</span>m</p>
+    <p class="text-xl text-yellow-400 font-bold mb-8" id="new-record-msg" style="display:none">¡NUEVO RÉCORD PERSONAL!</p>
+    <button onclick="location.reload()" class="bg-white text-black px-8 py-4 rounded-full font-bold text-xl hover:bg-gray-200 transition">REINTENTAR</button>
+</div>
+
+<div id="ui">
+    <div class="flex gap-4">
+        <div class="stat-card">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Distancia</p>
+            <p class="text-4xl font-black"><span id="dist-val">0</span>m</p>
+        </div>
+        <div class="stat-card border-yellow-400">
+            <p class="text-xs font-bold text-yellow-600 uppercase tracking-widest">Récord</p>
+            <p class="text-4xl font-black"><span id="high-score-val">0</span>m</p>
         </div>
     </div>
+</div>
 
-    <div id="countdown-screen">
-        <div id="countdown-number" class="text-[15rem] font-black text-white">5</div>
-        <p class="text-2xl font-bold text-gray-400 uppercase tracking-widest">¡Prepárate!</p>
-    </div>
+<div id="video-container">
+    <video id="video-preview" autoplay playsinline muted></video>
+    <canvas id="skeleton-canvas"></canvas>
+</div>
 
-    <div id="loading">
-        <div class="text-6xl mb-4 animate-bounce">🏃</div>
-        <h1 class="text-2xl font-bold">CARGANDO IA...</h1>
-        <p class="text-gray-500">Ponte frente a la cámara</p>
-    </div>
+<canvas id="gameCanvas"></canvas>
 
-    <div id="game-over">
-        <h2 class="text-6xl font-black mb-4">¡FIN DEL JUEGO!</h2>
-        <p class="text-2xl mb-2">Distancia: <span id="final-dist">0</span>m</p>
-        <p class="text-xl text-yellow-400 font-bold mb-8" id="new-record-msg" style="display:none">¡NUEVO RÉCORD PERSONAL!</p>
-        <button onclick="location.reload()" class="bg-white text-black px-8 py-4 rounded-full font-bold text-xl hover:bg-gray-200 transition">REINTENTAR</button>
-    </div>
+<script>
+// ─────────────────────────────────────────────
+// DOM
+// ─────────────────────────────────────────────
+const canvas         = document.getElementById('gameCanvas');
+const ctx            = canvas.getContext('2d');
+const video          = document.getElementById('video-preview');
+const skeletonCanvas = document.getElementById('skeleton-canvas');
+const sctx           = skeletonCanvas.getContext('2d');
+const distVal        = document.getElementById('dist-val');
+const finalDist      = document.getElementById('final-dist');
+const loading        = document.getElementById('loading');
+const gameOverEl     = document.getElementById('game-over');
+const startScreen    = document.getElementById('start-screen');
+const calibScreen    = document.getElementById('calibration-screen');
+const countdownScreen= document.getElementById('countdown-screen');
+const countdownNum   = document.getElementById('countdown-number');
+const btnComenzar    = document.getElementById('btn-comenzar');
+const ui             = document.getElementById('ui');
+const highScoreVal   = document.getElementById('high-score-val');
+const highScoreStart = document.getElementById('high-score-start');
+const newRecordMsg   = document.getElementById('new-record-msg');
+const levelAnnounce  = document.getElementById('level-announcement');
+const lvlNum         = document.getElementById('lvl-num');
+const lvlTitle       = document.getElementById('lvl-title');
+const moveIndicator  = document.getElementById('move-indicator');
+const comboDisplay   = document.getElementById('combo-display');
+const speedFill      = document.getElementById('speed-fill');
+const speedBarEl     = document.getElementById('speed-bar');
+const speedLabelEl   = document.getElementById('speed-label');
+const calibBarInner  = document.getElementById('calib-bar-inner');
+const calibStatus    = document.getElementById('calib-status');
+const progressBar    = document.getElementById('progress-bar');
+const powerupBar     = document.getElementById('powerup-bar');
+const comboCounter   = document.getElementById('combo-counter');
+const comboNumEl     = document.getElementById('combo-num');
+const deathOverlay   = document.getElementById('death-overlay');
+const tutorialScreen = document.getElementById('tutorial-screen');
+const tutBox         = document.getElementById('tut-box');
+const tutEmoji       = document.getElementById('tut-emoji');
+const tutTitle       = document.getElementById('tut-title');
+const tutDesc        = document.getElementById('tut-desc');
+const tutDetectBar   = document.getElementById('tut-detect-bar');
+const tutFeedback    = document.getElementById('tut-feedback');
+const tutProgress    = document.getElementById('tut-progress');
+const skinScreen     = document.getElementById('skin-screen');
+const skinGrid       = document.getElementById('skin-grid');
+const btnSkinOk      = document.getElementById('btn-skin-ok');
+const unlockBanner   = document.getElementById('unlock-banner');
 
-    <div id="ui">
-        <div class="flex gap-4">
-            <div class="stat-card">
-                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Distancia</p>
-                <p class="text-4xl font-black"><span id="dist-val">0</span>m</p>
-            </div>
-            <div class="stat-card border-yellow-400">
-                <p class="text-xs font-bold text-yellow-600 uppercase tracking-widest">Récord</p>
-                <p class="text-4xl font-black"><span id="high-score-val">0</span>m</p>
-            </div>
-        </div>
-    </div>
+// ─────────────────────────────────────────────
+// AUDIO ENGINE (Web Audio API — sin librerías)
+// ─────────────────────────────────────────────
+let audioCtx = null;
+function getAC() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+}
+function playTone(freq, type, dur, vol, delay=0) {
+    try {
+        const ac=getAC(), osc=ac.createOscillator(), g=ac.createGain();
+        osc.connect(g); g.connect(ac.destination);
+        osc.type=type; osc.frequency.setValueAtTime(freq, ac.currentTime+delay);
+        g.gain.setValueAtTime(vol, ac.currentTime+delay);
+        g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime+delay+dur);
+        osc.start(ac.currentTime+delay); osc.stop(ac.currentTime+delay+dur);
+    } catch(e){}
+}
+function playNoise(dur, vol, bandFreq=800) {
+    try {
+        const ac=getAC(), buf=ac.createBuffer(1,ac.sampleRate*dur,ac.sampleRate);
+        const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+        const src=ac.createBufferSource(), g=ac.createGain(), f=ac.createBiquadFilter();
+        f.type='bandpass'; f.frequency.value=bandFreq;
+        src.buffer=buf; src.connect(f); f.connect(g); g.connect(ac.destination);
+        g.gain.setValueAtTime(vol, ac.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ac.currentTime+dur);
+        src.start(); src.stop(ac.currentTime+dur);
+    } catch(e){}
+}
+function sfxJump()   { playTone(280,'sine',0.15,0.25); playTone(460,'sine',0.1,0.15,0.06); }
+function sfxLand()   { playTone(120,'sine',0.06,0.2); }
+function sfxKick()   { playNoise(0.08,0.4,600); playTone(110,'sawtooth',0.1,0.3); }
+function sfxPunch()  { playNoise(0.06,0.35,900); playTone(160,'square',0.08,0.2); }
+function sfxHit()    { playNoise(0.22,0.55,400); playTone(70,'sawtooth',0.22,0.4); }
+function sfxCombo()  { [380,500,640,820].forEach((f,i)=>playTone(f,'square',0.13,0.3,i*0.07)); }
+function sfxPowerup(){ [550,750,980].forEach((f,i)=>playTone(f,'sine',0.16,0.25,i*0.09)); }
+function sfxDeath()  { [400,340,280,220,160].forEach((f,i)=>playTone(f,'sawtooth',0.22,0.35,i*0.13)); }
 
-    <div id="video-container">
-        <video id="video-preview" autoplay playsinline muted></video>
-        <canvas id="skeleton-canvas"></canvas>
-    </div>
+// Música generativa que acelera con la velocidad
+let musicLoop=null, musicBeat=0;
+const BASS=[55,55,65,55,49,55,65,73];
+function startMusic() {
+    if (musicLoop) return;
+    function beat() {
+        if (isGameOver) { musicLoop=null; return; }
+        const t=Math.max(0.07, 0.20-speed*0.007);
+        const n=BASS[musicBeat%BASS.length];
+        playTone(n,'triangle',t*0.8,0.10);
+        if (musicBeat%4===0) playTone(n*2,'sine',t*0.3,0.05);
+        if (musicBeat%8===0) playNoise(0.04,0.06,200);
+        musicBeat++;
+        musicLoop=setTimeout(beat,t*1000);
+    }
+    beat();
+}
+function stopMusic() { if(musicLoop){clearTimeout(musicLoop);musicLoop=null;} }
 
-    <canvas id="gameCanvas"></canvas>
+// ─────────────────────────────────────────────
+// SHAKE DE CÁMARA
+// ─────────────────────────────────────────────
+let shakeX=0, shakeY=0, shakeMag=0;
+function triggerShake(mag, frames) {
+    shakeMag=mag; shakeX=0; shakeY=0;
+    let f=frames;
+    const tick=()=>{
+        if(f-->0){ shakeX=(Math.random()-.5)*shakeMag*(f/frames); shakeY=(Math.random()-.5)*shakeMag*(f/frames); requestAnimationFrame(tick); }
+        else{ shakeX=0; shakeY=0; }
+    };
+    tick();
+}
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const video = document.getElementById('video-preview');
-        const skeletonCanvas = document.getElementById('skeleton-canvas');
-        const sctx = skeletonCanvas.getContext('2d');
-        
-        const distVal = document.getElementById('dist-val');
-        const finalDist = document.getElementById('final-dist');
-        const loading = document.getElementById('loading');
-        const gameOver = document.getElementById('game-over');
-        const startScreen = document.getElementById('start-screen');
-        const countdownScreen = document.getElementById('countdown-screen');
-        const countdownNumber = document.getElementById('countdown-number');
-        const btnComenzar = document.getElementById('btn-comenzar');
-        const ui = document.getElementById('ui');
-        const highScoreVal = document.getElementById('high-score-val');
-        const highScoreStart = document.getElementById('high-score-start');
-        const newRecordMsg = document.getElementById('new-record-msg');
-        const levelAnnounce = document.getElementById('level-announcement');
-        const lvlNum = document.getElementById('lvl-num');
-        const lvlTitle = document.getElementById('lvl-title');
+// ─────────────────────────────────────────────
+// RASTRO DE VELOCIDAD
+// ─────────────────────────────────────────────
+let trail=[];
+function updateTrail() {
+    if (speed>3 && isGameStarted && !isGameOver) {
+        trail.push({ x:player.x-6, y:isCrouching?player.groundY+15:player.y, life:1.0 });
+        if (trail.length>10) trail.shift();
+    } else if (trail.length>0) {
+        trail.shift();
+    }
+    trail.forEach(t=>{ t.life-=0.12; });
+    trail=trail.filter(t=>t.life>0);
+}
+function drawTrail() {
+    if (speed<3) return;
+    trail.forEach((t,i)=>{
+        const a=t.life*(speed/14)*0.5;
+        ctx.globalAlpha=Math.min(a,0.4);
+        ctx.font='80px Arial';
+        ctx.fillText(currentLevel===3?'👨‍🚀':'🏃', t.x-(trail.length-i)*10, t.y);
+    });
+    ctx.globalAlpha=1.0;
+}
 
-        let isGameOver = false;
-        let isGameStarted = false;
-        let distance = 0;
-        let speed = 0;
-        let obstacles = [];
-        let iaLoaded = false;
-        let highScore = localStorage.getItem('runnerHighScore') || 0;
+// ─────────────────────────────────────────────
+// CONTADOR DE COMBO ACTIVO
+// ─────────────────────────────────────────────
+let activeComboCount=0, comboResetTimer=null;
+const COMBO_COLORS=['#ffffff','#4ade80','#fbbf24','#f97316','#ef4444','#a855f7'];
+function incrementCombo() {
+    activeComboCount++;
+    if (activeComboCount > statMaxCombo) statMaxCombo = activeComboCount;
+    if (comboResetTimer) clearTimeout(comboResetTimer);
+    comboResetTimer=setTimeout(()=>{ activeComboCount=0; comboCounter.style.display='none'; }, 1600);
+    if (activeComboCount>=2) {
+        const col=COMBO_COLORS[Math.min(activeComboCount-1,COMBO_COLORS.length-1)];
+        comboNumEl.textContent='x'+activeComboCount;
+        comboNumEl.style.color=col;
+        comboNumEl.style.textShadow='0 0 20px '+col;
+        comboCounter.style.display='block';
+        comboCounter.style.animation='none';
+        void comboCounter.offsetWidth;
+        comboCounter.style.animation='comboBump 0.25s ease-out';
+    }
+}
 
-        // Vidas y Progreso
-        let lives = 3;
-        let isInvincible = false;
-        let isKicking = false; 
-        let isPunching = false; 
-        let popups = []; // Textos flotantes (KICK/PUNCH)
-        const progressBar = document.getElementById('progress-bar');
+// ─────────────────────────────────────────────
+// SLOW MOTION + ZOOM AL MORIR
+// ─────────────────────────────────────────────
+let deathZoom=1.0, deathZoomActive=false;
+function triggerDeathEffect(callback) {
+    // Flash rojo
+    deathOverlay.style.display='block';
+    deathOverlay.style.background='rgba(200,0,0,0.6)';
+    deathOverlay.style.animation='none';
+    void deathOverlay.offsetWidth;
+    deathOverlay.style.animation='deathFlash 0.6s ease-out forwards';
 
-        // Niveles
-        let currentLevel = 0;
-        const levelData = [
-            { 
-                name: "CIUDAD NOCTURNA", 
-                threshold: 0,
-                sky: ["#020617", "#1e1b4b"],
-                static: ["🚧", "🧱", "🚧", "🚧"],
-                animals: ["🐕", "🐈", "🦖", "🐕"],
-                ground: "#020617",
-                roadLine: "#fbbf24"
-            },
-            { 
-                name: "BOSQUE MÁGICO", 
-                threshold: 1000,
-                sky: ["#064e3b", "#022c22"],
-                static: ["🪵", "🍄", "🪵", "🍄"],
-                animals: ["🦌", "🐗", "🐒", "🦌"],
-                ground: "#064e3b",
-                roadLine: "#4ade80"
-            },
-            { 
-                name: "DESIERTO ÁRIDO", 
-                threshold: 2000,
-                sky: ["#7c2d12", "#451a03"],
-                static: ["🌵", "🪨", "🌵", "🪨"],
-                animals: ["🐪", "🐍", "🦂", "🐪"],
-                ground: "#7c2d12",
-                roadLine: "#f97316"
-            },
-            { 
-                name: "ESPACIO EXTERIOR", 
-                threshold: 3000,
-                sky: ["#000000", "#2e1065"],
-                static: ["☄️", "🛰️", "☄️", "🛰️"],
-                animals: ["👽", "🛸", "👾", "👽"],
-                ground: "#000000",
-                roadLine: "#a855f7"
-            }
-        ];
+    // Slow-mo: reducir speed temporalmente
+    const savedSpeed=speed;
+    speed*=0.1;
 
-        // Elementos de Ambiente
-        let clouds = [];
-        let mountains = [];
-        let buildings = [];
-        let trees = [];
-        let stars = [];
-        let weather = []; // Partículas de clima
-        let roadOffset = 0;
+    // Zoom hacia el jugador
+    deathZoomActive=true;
+    deathZoom=1.0;
+    const zoomInterval=setInterval(()=>{
+        deathZoom=Math.min(deathZoom+0.04, 1.4);
+        if(deathZoom>=1.4){ clearInterval(zoomInterval); deathZoomActive=false; deathZoom=1.0; speed=savedSpeed; callback(); }
+    }, 16);
+}
 
-        const player = {
-            x: 150,
-            y: 0,
-            vy: 0,
-            size: 80,
-            isJumping: false,
-            groundY: 0
+// ─────────────────────────────────────────────
+// ESTADÍSTICAS DE PARTIDA
+// ─────────────────────────────────────────────
+let statKicks=0, statPunches=0, statJumps=0, statMaxCombo=0, statStartTime=0;
+
+function resetStats() { statKicks=0; statPunches=0; statJumps=0; statMaxCombo=0; statStartTime=Date.now(); }
+
+function showStats() {
+    const cals = Math.round((distance*0.05 + statKicks*1.2 + statPunches*1.0 + statJumps*0.8)*0.9);
+    document.getElementById('final-dist').textContent   = Math.floor(distance);
+    document.getElementById('stat-combo').textContent   = statMaxCombo;
+    document.getElementById('stat-kicks').textContent   = statKicks;
+    document.getElementById('stat-punches').textContent = statPunches;
+    document.getElementById('stat-jumps').textContent   = statJumps;
+    document.getElementById('stat-cals').textContent    = cals;
+}
+
+// ─────────────────────────────────────────────
+// SISTEMA DE SKINS
+// ─────────────────────────────────────────────
+const SKINS = [
+    { id:'runner',   emoji:'🏃',  name:'Runner',    req:0    },
+    { id:'princess', emoji:'👸',  name:'Princesa',  req:500  },
+    { id:'wizard',   emoji:'🧙',  name:'Mago',      req:1000 },
+    { id:'hero',     emoji:'🦸',  name:'Héroe',     req:2000 },
+    { id:'robot',    emoji:'🤖',  name:'Robot',     req:3000 },
+    { id:'ninja',    emoji:'🥷',  name:'Ninja',     req:5000 },
+    { id:'dragon',   emoji:'🐉',  name:'Dragón',    req:8000 },
+    { id:'astro',    emoji:'👨‍🚀', name:'Astronauta',req:0    },
+];
+let selectedSkin = localStorage.getItem('selectedSkin') || 'runner';
+const getTotalDist = () => parseInt(localStorage.getItem('totalDist')||'0');
+
+function getSkinEmoji() {
+    // En nivel espacio siempre astronauta
+    if (currentLevel===3) return '👨‍🚀';
+    return (SKINS.find(s=>s.id===selectedSkin)||SKINS[0]).emoji;
+}
+
+function renderSkinGrid() {
+    const td=getTotalDist();
+    skinGrid.innerHTML='';
+    SKINS.forEach(skin=>{
+        const unlocked=td>=skin.req, selected=skin.id===selectedSkin;
+        const card=document.createElement('div');
+        card.className='skin-card'+(selected?' selected':'')+(unlocked?'':' locked');
+        card.innerHTML=`<span class="skin-emoji">${skin.emoji}</span><span class="skin-name">${skin.name}</span><span class="skin-req">${unlocked?'✅':skin.req+'m'}</span>${unlocked?'':'<span class="skin-lock">🔒</span>'}`;
+        if(unlocked) card.onclick=()=>{ selectedSkin=skin.id; localStorage.setItem('selectedSkin',selectedSkin); renderSkinGrid(); };
+        skinGrid.appendChild(card);
+    });
+}
+
+function checkUnlocks(dist) {
+    const prev=getTotalDist(), newTotal=prev+Math.floor(dist);
+    localStorage.setItem('totalDist', newTotal);
+    const newOnes=SKINS.filter(s=>s.req>0&&s.req<=newTotal&&s.req>prev);
+    if(newOnes.length>0){
+        unlockBanner.textContent='🔓 ¡Desbloqueaste: '+newOnes.map(s=>s.emoji+' '+s.name).join(', ')+'!';
+        unlockBanner.style.display='block';
+    }
+}
+
+btnSkinOk.onclick=()=>{
+    skinScreen.style.display='none';
+    if(!localStorage.getItem('tutorialDone')) startTutorial();
+    else startCalibration();
+};
+
+// ─────────────────────────────────────────────
+// TUTORIAL CON DETECCIÓN REAL
+// ─────────────────────────────────────────────
+const TUT_STEPS=[
+    { id:'run',    emoji:'🏃', title:'CORRER',    desc:'Movete en el lugar rápido',       color:'#4ade80' },
+    { id:'jump',   emoji:'⬆️', title:'SALTAR',    desc:'Doblá las rodillas y saltá',      color:'#60a5fa' },
+    { id:'crouch', emoji:'⬇️', title:'AGACHARSE', desc:'Bajate bien, doblá el torso',     color:'#f97316' },
+    { id:'kick',   emoji:'🦶', title:'PATADA',    desc:'Levantá una rodilla bien arriba', color:'#ef4444' },
+    { id:'punch',  emoji:'👊', title:'PUÑETAZO',  desc:'Extendé un brazo hacia adelante', color:'#a855f7' },
+];
+let tutStep=0, tutDetected=false, tutDetectProgress=0, isTutorialActive=false;
+
+function startTutorial() {
+    isTutorialActive=true; tutStep=0; tutDetected=false; tutDetectProgress=0;
+    tutorialScreen.style.display='flex';
+    renderTutProgress(); showTutStep(0);
+}
+
+function renderTutProgress() {
+    tutProgress.innerHTML='';
+    TUT_STEPS.forEach((_,i)=>{
+        const dot=document.createElement('div');
+        dot.className='tut-dot'+(i<tutStep?' done':i===tutStep?' active':'');
+        tutProgress.appendChild(dot);
+    });
+}
+
+function showTutStep(i) {
+    const s=TUT_STEPS[i];
+    tutEmoji.textContent=s.emoji; tutTitle.textContent=s.title; tutDesc.textContent=s.desc;
+    tutDetectBar.style.width='0%'; tutDetectBar.style.background=s.color;
+    tutFeedback.textContent=''; tutBox.classList.remove('detected');
+    tutDetectProgress=0; tutDetected=false; renderTutProgress();
+}
+
+function tutAdvance() {
+    tutBox.classList.add('detected'); tutFeedback.textContent='✅ ¡Perfecto!';
+    playTone(600,'sine',0.15,0.3); playTone(800,'sine',0.1,0.25,0.1);
+    setTimeout(()=>{
+        tutStep++;
+        if(tutStep>=TUT_STEPS.length){
+            isTutorialActive=false; tutorialScreen.style.display='none';
+            localStorage.setItem('tutorialDone','1'); startCalibration();
+        } else { showTutStep(tutStep); }
+    }, 900);
+}
+
+function processTutorialDetection(lm, sd) {
+    if(!isTutorialActive||tutDetected) return;
+    const step=TUT_STEPS[tutStep];
+    let hit=false;
+    if(step.id==='run')    hit=sd>0.012;
+    if(step.id==='jump'){  const kY=(lm[25].y+lm[26].y)/2,sY=(lm[11].y+lm[12].y)/2; hit=(kY-sY)<0.25; }
+    if(step.id==='crouch'){ const sY=(lm[11].y+lm[12].y)/2; hit=baseShoulderY&&(sY-baseShoulderY)>0.12; }
+    if(step.id==='kick'){  const l=lm[23].y-lm[25].y,r=lm[24].y-lm[26].y; hit=l>0.15||r>0.15; }
+    if(step.id==='punch'){ const l=lm[13].y-lm[15].y,r=lm[14].y-lm[16].y; hit=l>0.18||r>0.18; }
+    tutDetectProgress=Math.min(Math.max(tutDetectProgress+(hit?8:-3),0),100);
+    tutDetectBar.style.width=tutDetectProgress+'%';
+    if(tutDetectProgress>=100&&!tutDetected){ tutDetected=true; tutAdvance(); }
+}
+let isGameStarted = false;
+let distance      = 0;
+let speed         = 0;
+let obstacles     = [];
+let powerups      = [];
+let particles     = [];
+let popups        = [];
+let iaLoaded      = false;
+let highScore     = parseInt(localStorage.getItem('runnerHighScore') || '0');
+
+let lives        = 3;
+let isInvincible = false;
+let isKicking    = false;
+let isPunching   = false;
+let isCrouching  = false;
+
+let activePowerups  = { shield:0, speed:0, doubleJump:0 };
+let hasDoubleJumped = false;
+
+let comboState = 0;
+let comboTimer = null;
+
+// ─────────────────────────────────────────────
+// CALIBRACIÓN + OPTIMIZACIÓN DE DETECCIÓN
+// ─────────────────────────────────────────────
+let calibrating   = false;
+let calibSamples  = [];
+let baseShoulderY = null;
+let baseHipY      = null;
+const CALIB_NEEDED = 40;
+
+// OPT 4: Zona muerta dinámica calculada desde calibración
+let noiseFloor = 0.005; // se recalcula con la desviación estándar real
+
+// OPT 5: Suavizado adicional de landmarks entre frames (filtro exponencial)
+let smoothedLM  = null;
+const LM_ALPHA  = 0.55; // peso del frame anterior (0=sin suavizado, 1=máximo)
+const VIS_THRESHOLD = 0.5; // OPT 3: umbral de confianza de landmark
+
+function getSmoothedLM(raw) {
+    if (!smoothedLM) {
+        smoothedLM = raw.map(p => ({ x:p.x, y:p.y, z:p.z||0, visibility:p.visibility||0 }));
+        return smoothedLM;
+    }
+    smoothedLM = smoothedLM.map((prev, i) => {
+        const cur = raw[i];
+        if (!cur || (cur.visibility||0) < 0.3) return prev; // ignorar puntos no visibles
+        return {
+            x: prev.x * LM_ALPHA + cur.x * (1 - LM_ALPHA),
+            y: prev.y * LM_ALPHA + cur.y * (1 - LM_ALPHA),
+            z: (prev.z||0) * LM_ALPHA + (cur.z||0) * (1 - LM_ALPHA),
+            visibility: cur.visibility
         };
+    });
+    return smoothedLM;
+}
 
-        function init() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            player.groundY = canvas.height * 0.75;
-            player.y = player.groundY;
-            
-            highScoreVal.innerText = highScore;
-            highScoreStart.innerText = highScore;
+// ─────────────────────────────────────────────
+// NIVELES
+// ─────────────────────────────────────────────
+let currentLevel = 0;
+const levelData = [
+    { name:"CIUDAD NOCTURNA", threshold:0,    sky:["#020617","#1e1b4b"], static:["🚧","🧱","🚧","🚧"],  animals:["🐕","🐈","🦖","🐕"], aerial:["🦇","🦅","🦇","🦅"], ground:"#020617", roadLine:"#fbbf24" },
+    { name:"BOSQUE MÁGICO",   threshold:1000, sky:["#064e3b","#022c22"], static:["🪵","🍄","🪵","🍄"],  animals:["🦌","🐗","🐒","🦌"], aerial:["🦉","🦜","🦉","🦜"], ground:"#064e3b", roadLine:"#4ade80" },
+    { name:"DESIERTO ÁRIDO",  threshold:2000, sky:["#7c2d12","#451a03"], static:["🌵","🪨","🌵","🪨"],  animals:["🐪","🐍","🦂","🐪"], aerial:["🦅","🦅","🦅","🦅"], ground:"#7c2d12", roadLine:"#f97316" },
+    { name:"ESPACIO EXTERIOR",threshold:3000, sky:["#000000","#2e1065"], static:["☄️","🛰️","☄️","🛰️"], animals:["👽","🛸","👾","👽"], aerial:["🛸","👾","🛸","👾"], ground:"#000000", roadLine:"#a855f7" }
+];
 
-            initEnvironment();
+// ─────────────────────────────────────────────
+// AMBIENTE
+// ─────────────────────────────────────────────
+let clouds=[], mountains=[], buildings=[], trees=[], stars=[], weather=[];
+let roadOffset = 0;
+const player = { x:150, y:0, vy:0, isJumping:false, groundY:0, frame:0, frameTimer:0 };
+
+function init() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    player.groundY = canvas.height * 0.75;
+    player.y       = player.groundY;
+    highScoreVal.innerText   = highScore;
+    highScoreStart.innerText = highScore;
+    initEnvironment();
+}
+
+function initEnvironment() {
+    stars     = Array.from({length:100}, () => ({ x:Math.random()*canvas.width, y:Math.random()*(canvas.height*0.5), size:Math.random()*2 }));
+    clouds    = Array.from({length:5},   () => ({ x:Math.random()*canvas.width, y:50+Math.random()*100, speed:0.1+Math.random()*0.3 }));
+    mountains = [{x:0,speed:0.05},{x:canvas.width*0.6,speed:0.05}];
+    buildings = Array.from({length:10}, (_,i) => ({ x:i*200, width:120+Math.random()*80, height:150+Math.random()*250, speed:0.15, windows:Array.from({length:20},()=>({x:Math.random(),y:Math.random(),lit:Math.random()>0.6})) }));
+    trees     = Array.from({length:6},  (_,i) => ({ x:i*400+Math.random()*200, speed:0.4 }));
+    weather   = Array.from({length:80}, ()    => ({ x:Math.random()*canvas.width, y:Math.random()*canvas.height, size:1+Math.random()*3, speed:5+Math.random()*10 }));
+}
+
+// ─────────────────────────────────────────────
+// POWER-UPS
+// ─────────────────────────────────────────────
+const POWERUP_DEFS = [
+    { type:'shield',     emoji:'🛡️', color:'#60a5fa', label:'ESCUDO',      duration:5000 },
+    { type:'speed',      emoji:'⚡',  color:'#fbbf24', label:'TURBO',       duration:4000 },
+    { type:'doubleJump', emoji:'🪂',  color:'#a78bfa', label:'DOBLE SALTO', duration:6000 }
+];
+
+function spawnPowerup() {
+    const def = POWERUP_DEFS[Math.floor(Math.random()*POWERUP_DEFS.length)];
+    powerups.push({ x:canvas.width, y:player.groundY-80, bob:Math.random()*Math.PI*2, ...def });
+}
+
+function activatePowerup(pu) {
+    activePowerups[pu.type] = Date.now() + pu.duration;
+    addPopup('✨ ' + pu.label + '!', pu.color);
+    spawnParticles(pu.x, pu.y, pu.color, 20);
+    if (pu.type === 'shield') {
+        [1,2,3].forEach(i => { document.getElementById('h'+i).style.filter = 'drop-shadow(0 0 8px #60a5fa)'; });
+        setTimeout(() => { [1,2,3].forEach(i => { document.getElementById('h'+i).style.filter = 'drop-shadow(0 0 5px rgba(255,0,0,0.5))'; }); }, pu.duration);
+    }
+}
+
+function renderPowerupBar() {
+    const now = Date.now();
+    powerupBar.innerHTML = '';
+    POWERUP_DEFS.forEach(def => {
+        const expiry = activePowerups[def.type];
+        if (expiry > now) {
+            const rem = Math.ceil((expiry - now) / 1000);
+            const span = document.createElement('span');
+            span.style.cssText = 'font-size:1.3rem;background:rgba(0,0,0,0.6);padding:3px 8px;border-radius:8px;border:1px solid ' + def.color + ';color:white;';
+            span.textContent = def.emoji + ' ' + rem + 's';
+            powerupBar.appendChild(span);
         }
+    });
+}
 
-        function initEnvironment() {
-            stars = Array.from({length: 100}, () => ({
-                x: Math.random() * canvas.width,
-                y: Math.random() * (canvas.height * 0.5),
-                size: Math.random() * 2
-            }));
+// ─────────────────────────────────────────────
+// PARTÍCULAS
+// ─────────────────────────────────────────────
+function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd   = 2 + Math.random() * 5;
+        particles.push({ x, y, vx:Math.cos(angle)*spd, vy:Math.sin(angle)*spd-2, life:1.0, decay:0.025+Math.random()*0.02, size:4+Math.random()*6, color });
+    }
+}
 
-            clouds = Array.from({length: 5}, () => ({
-                x: Math.random() * canvas.width,
-                y: 50 + Math.random() * 100,
-                speed: 0.1 + Math.random() * 0.3
-            }));
+function updateParticles() {
+    for (let i = particles.length-1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.vy += 0.15; p.life -= p.decay;
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+}
 
-            mountains = [
-                {x: 0, speed: 0.05},
-                {x: canvas.width * 0.6, speed: 0.05}
-            ];
+function drawParticles() {
+    particles.forEach(p => {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle   = p.color;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size*p.life, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.globalAlpha = 1.0;
+}
 
-            buildings = Array.from({length: 10}, (_, i) => ({
-                x: i * 200,
-                width: 120 + Math.random() * 80,
-                height: 150 + Math.random() * 250,
-                speed: 0.15,
-                windows: Array.from({length: 20}, () => ({
-                    x: Math.random(),
-                    y: Math.random(),
-                    lit: Math.random() > 0.6
-                }))
-            }));
+// ─────────────────────────────────────────────
+// ACCIONES DEL JUGADOR
+// ─────────────────────────────────────────────
+function triggerKick() {
+    if (isKicking) return;
+    isKicking = true; statKicks++;
+    sfxKick(); incrementCombo();
+    addPopup("¡KICK!", "#ff4444");
+    spawnParticles(player.x+40, player.y, '#ff4444', 10);
+    setTimeout(() => { isKicking = false; }, 600);
+    comboState = 1;
+    if (comboTimer) clearTimeout(comboTimer);
+    comboTimer = setTimeout(() => { comboState = 0; }, 1200);
+}
 
-            trees = Array.from({length: 6}, (_, i) => ({
-                x: i * 400 + Math.random() * 200,
-                speed: 0.4
-            }));
+function triggerPunch() {
+    if (isPunching) return;
+    isPunching = true; statPunches++;
+    sfxPunch(); incrementCombo();
+    addPopup("¡PUNCH!", "#4488ff");
+    spawnParticles(player.x+40, player.y, '#4488ff', 10);
+    setTimeout(() => { isPunching = false; }, 600);
+    if (comboState === 1) {
+        comboState = 0;
+        if (comboTimer) clearTimeout(comboTimer);
+        triggerCombo();
+    }
+}
 
-            weather = Array.from({length: 80}, () => ({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                size: 1 + Math.random() * 3,
-                speed: 5 + Math.random() * 10
-            }));
+function triggerCombo() {
+    let nearest = null;
+    let nearestDist = Infinity;
+    obstacles.forEach(obs => {
+        const d = obs.x - player.x;
+        if (d > -60 && d < nearestDist) { nearestDist = d; nearest = obs; }
+    });
+
+    if (nearest) {
+        const ex = nearest.x, ey = nearest.y;
+        spawnParticles(ex, ey, '#fbbf24', 30);
+        spawnParticles(ex, ey, '#ffffff', 20);
+        spawnParticles(ex, ey, '#ff6600', 15);
+        for (let a = 0; a < 16; a++) {
+            const angle = (a/16) * Math.PI * 2;
+            particles.push({ x:ex, y:ey, vx:Math.cos(angle)*7, vy:Math.sin(angle)*7, life:1.0, decay:0.03, size:8, color:'#fbbf24' });
         }
+        popups.push({ x:ex, y:ey-40, text:'💥 DESTRUIDO!', color:'#fbbf24', life:1.0 });
+        obstacles.splice(obstacles.indexOf(nearest), 1);
+    } else {
+        spawnParticles(player.x, player.y, '#fbbf24', 20);
+        spawnParticles(player.x, player.y, '#ffffff', 10);
+    }
 
-        function triggerKick() {
-            isKicking = true;
-            addPopup("¡KICK!", "#ff4444");
-            setTimeout(() => {
-                isKicking = false;
-            }, 600);
+    comboDisplay.textContent = '💥 ¡COMBO!';
+    comboDisplay.style.display = 'block';
+    comboDisplay.style.animation = 'none';
+    void comboDisplay.offsetWidth;
+    comboDisplay.style.animation = 'comboPop 0.3s ease';
+    sfxCombo();
+    updateMoveIndicator("💥 ¡COMBO! Obstáculo destruido", true);
+    setTimeout(() => { comboDisplay.style.display = 'none'; }, 1500);
+}
+
+function addPopup(text, color) {
+    popups.push({ x:player.x, y:player.y-60, text, color, life:1.0 });
+}
+
+// ─────────────────────────────────────────────
+// ANIMACIÓN DEL JUGADOR
+// ─────────────────────────────────────────────
+const RUN_FRAMES   = ["🏃","🚶","🏃","🚶"];
+const ASTRO_FRAMES = ["👨‍🚀","🧑‍🚀"];
+
+function getPlayerEmoji() {
+    if (isCrouching)      return "🧎";
+    if (isPunching)       return "👊";
+    if (isKicking)        return "🦶";
+    if (player.isJumping) return "🤸";
+    if (speed > 0.5) {
+        const fi = Math.max(3, Math.floor(16 - speed));
+        player.frameTimer++;
+        if (player.frameTimer >= fi) { player.frameTimer = 0; player.frame = (player.frame+1)%4; }
+        // Nivel espacio siempre astronauta, sino usar skin seleccionada
+        if (currentLevel===3) return ASTRO_FRAMES[player.frame%2];
+        const skinEm = getSkinEmoji();
+        return player.frame%2===0 ? skinEm : '🚶';
+    }
+    return getSkinEmoji();
+}
+
+// ─────────────────────────────────────────────
+// NIVELES
+// ─────────────────────────────────────────────
+function checkLevel() {
+    const next = levelData[currentLevel+1];
+    if (next && distance >= next.threshold) { currentLevel++; showLevelAnnounce(); }
+}
+
+function showLevelAnnounce() {
+    levelAnnounce.style.display = 'block';
+    lvlNum.innerText   = currentLevel+1;
+    lvlTitle.innerText = levelData[currentLevel].name;
+    setTimeout(() => { levelAnnounce.style.display = 'none'; }, 3000);
+}
+
+// ─────────────────────────────────────────────
+// MEDIAPIPE — OPT 1: modelComplexity 0
+// ─────────────────────────────────────────────
+const pose = new Pose({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${f}` });
+pose.setOptions({
+    modelComplexity: 0,          // OPT 1: modelo ligero (~2x más rápido)
+    smoothLandmarks: true,
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
+});
+
+function drawSkeleton(lm) {
+    skeletonCanvas.width  = video.videoWidth  || 320;
+    skeletonCanvas.height = video.videoHeight || 240;
+    sctx.clearRect(0, 0, skeletonCanvas.width, skeletonCanvas.height);
+    sctx.fillStyle = "#00FF00"; sctx.strokeStyle = "#00FF00"; sctx.lineWidth = 2;
+    [11,12,13,14,15,16,23,24,25,26,27,28].forEach(idx => {
+        const p = lm[idx];
+        if (!p || (p.visibility||0) < 0.3) return;
+        sctx.beginPath(); sctx.arc(p.x*skeletonCanvas.width, p.y*skeletonCanvas.height, 4, 0, Math.PI*2); sctx.fill();
+    });
+    [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28]].forEach(([a,b]) => {
+        const pa = lm[a], pb = lm[b];
+        if (!pa||!pb||(pa.visibility||0)<0.3||(pb.visibility||0)<0.3) return;
+        sctx.beginPath();
+        sctx.moveTo(pa.x*skeletonCanvas.width, pa.y*skeletonCanvas.height);
+        sctx.lineTo(pb.x*skeletonCanvas.width, pb.y*skeletonCanvas.height);
+        sctx.stroke();
+    });
+}
+
+// ─────────────────────────────────────────────
+// DETECCIÓN DE MOVIMIENTO
+// ─────────────────────────────────────────────
+let lastAnkleY=0, lastShoulderY=0, smoothedDelta=0;
+let canJump=true;
+let lastKickTime=0, lastPunchTime=0, lastCrouchTime=0;
+
+pose.onResults(results => {
+
+    // ── CALIBRACIÓN ──
+    if (calibrating && results.poseLandmarks) {
+        const raw = results.poseLandmarks;
+        drawSkeleton(raw);
+        const sY = (raw[11].y + raw[12].y) / 2;
+        const hY = (raw[23].y + raw[24].y) / 2;
+        calibSamples.push({ shoulderY:sY, hipY:hY });
+        calibBarInner.style.width = Math.min(calibSamples.length/CALIB_NEEDED*100, 100) + '%';
+
+        if (calibSamples.length >= CALIB_NEEDED) {
+            baseShoulderY = calibSamples.reduce((s,c)=>s+c.shoulderY,0) / calibSamples.length;
+            baseHipY      = calibSamples.reduce((s,c)=>s+c.hipY,0)      / calibSamples.length;
+
+            // OPT 4: Calcular ruido de fondo real de la cámara desde la varianza
+            const variance = calibSamples.reduce((s,c) => s + Math.pow(c.shoulderY - baseShoulderY, 2), 0) / calibSamples.length;
+            const stdDev   = Math.sqrt(variance);
+            noiseFloor = Math.min(Math.max(stdDev * 2.5, 0.003), 0.012);
+
+            calibrating = false;
+            calibStatus.textContent = '✅ ¡Listo! (umbral: ' + noiseFloor.toFixed(4) + ')';
+            calibBarInner.style.background = '#fbbf24';
+            setTimeout(startCountdown, 800);
+        } else {
+            calibStatus.textContent = 'Analizando... ' + calibSamples.length + '/' + CALIB_NEEDED;
         }
+        return;
+    }
 
-        function triggerPunch() {
-            isPunching = true;
-            addPopup("¡PUNCH!", "#4444ff");
-            setTimeout(() => {
-                isPunching = false;
-            }, 600);
+    // ── PRIMERA DETECCIÓN ──
+    if (!iaLoaded && results.poseLandmarks) {
+        iaLoaded = true;
+        loading.style.display = 'none';
+        renderSkinGrid();
+        skinScreen.style.display = 'flex';
+    }
+
+    if (!results.poseLandmarks) return;
+
+    // OPT 5: Aplicar suavizado de landmarks antes de procesar
+    const lm = getSmoothedLM(results.poseLandmarks);
+    drawSkeleton(lm);
+
+    const shoulderRef = baseShoulderY || 0.35;
+
+    // ── 1. VELOCIDAD ──
+    // OPT 3: Filtro de visibilidad — solo usar landmark si es confiable
+    const lAnk = lm[27], rAnk = lm[28], lSho = lm[11], rSho = lm[12];
+    const ankVis = ((lAnk.visibility||0) + (rAnk.visibility||0)) / 2;
+    const shoVis = ((lSho.visibility||0) + (rSho.visibility||0)) / 2;
+    const ankleY   = ankVis > VIS_THRESHOLD ? (lAnk.y + rAnk.y) / 2 : lastAnkleY;
+    const shoulderY= shoVis > VIS_THRESHOLD ? (lSho.y + rSho.y) / 2 : lastShoulderY;
+
+    let rawDelta = 0;
+    if (lastAnkleY    !== 0) rawDelta += Math.abs(ankleY    - lastAnkleY)    * 1.5;
+    if (lastShoulderY !== 0) rawDelta += Math.abs(shoulderY - lastShoulderY) * 1.2;
+    smoothedDelta = smoothedDelta * 0.75 + rawDelta * 0.25;
+
+    // Tutorial: procesar con smoothedDelta ya calculado
+    if (isTutorialActive) { processTutorialDetection(lm, smoothedDelta); return; }
+    if (!isGameStarted || isGameOver) return;
+
+    const maxSpd  = activePowerups.speed > Date.now() ? 18 : 12;
+    const spdMult = activePowerups.speed > Date.now() ? 16 : 12;
+
+    // OPT 4: Usar noiseFloor dinámico en vez de 0.005 fijo
+    if (smoothedDelta > noiseFloor) {
+        speed = Math.min(speed + smoothedDelta * spdMult, maxSpd);
+        if (!isKicking && !isPunching && !player.isJumping && !isCrouching) {
+            const lv = Math.min(Math.floor(speed/maxSpd*3), 2);
+            updateMoveIndicator(["🏃 ¡Corriendo!","🏃 ¡Más rápido!","💨 ¡TURBO!"][lv], true);
         }
-
-        function addPopup(text, color) {
-            popups.push({
-                x: player.x,
-                y: player.y - 60,
-                text: text,
-                color: color,
-                opacity: 1,
-                life: 1.0
-            });
+    } else {
+        speed *= 0.75;
+        if (speed < 0.1) speed = 0;
+        smoothedDelta = 0;
+        if (!isKicking && !isPunching && !player.isJumping && !isCrouching) {
+            updateMoveIndicator("🧍 Quieto — ¡Movete!", false);
         }
+    }
+    speedFill.style.height = Math.min(speed/maxSpd*100, 100) + '%';
+    lastAnkleY    = ankleY;
+    lastShoulderY = shoulderY;
 
-        function checkLevel() {
-            const nextLevel = levelData[currentLevel + 1];
-            if (nextLevel && distance >= nextLevel.threshold) {
-                currentLevel++;
-                showLevelAnnounce();
-            }
+    const now = Date.now();
+
+    // ── 2. AGACHARSE ──
+    const shoulderDrop = shoulderY - shoulderRef;
+    if (shoulderDrop > 0.10 && !isCrouching && now - lastCrouchTime > 500) {
+        isCrouching = true;
+        lastCrouchTime = now;
+        updateMoveIndicator("⬇️ ¡Agachado!", true);
+    } else if (shoulderDrop < 0.05 && isCrouching) {
+        isCrouching = false;
+    }
+
+    // ── 3. SALTO ──
+    const kneeY       = (lm[25].y + lm[26].y) / 2;
+    const compression = kneeY - shoulderY;
+    if (compression < 0.28 && canJump && !player.isJumping) {
+        player.vy = -20; player.isJumping = true; canJump = false; statJumps++;
+        sfxJump();
+        updateMoveIndicator("⬆️ ¡Salto!", true);
+    }
+    if (compression < 0.22 && player.isJumping && !hasDoubleJumped && activePowerups.doubleJump > now) {
+        player.vy = -18; hasDoubleJumped = true;
+        sfxJump();
+        spawnParticles(player.x, player.y, '#a78bfa', 12);
+        updateMoveIndicator("🪂 ¡DOBLE SALTO!", true);
+    }
+    if (compression > 0.32) { canJump = true; hasDoubleJumped = false; }
+
+    // ── 4. PATADA — OPT 3: solo si rodillas visibles ──
+    const lKnee = lm[25], rKnee = lm[26], lHip = lm[23], rHip = lm[24];
+    if ((lKnee.visibility||0) > VIS_THRESHOLD || (rKnee.visibility||0) > VIS_THRESHOLD) {
+        const lKneeLift = lHip.y - lKnee.y;
+        const rKneeLift = rHip.y - rKnee.y;
+        if ((lKneeLift > 0.12 || rKneeLift > 0.12) && now - lastKickTime > 800) {
+            lastKickTime = now;
+            triggerKick();
+            updateMoveIndicator("🦶 ¡PATADA!", true);
         }
+    }
 
-        function showLevelAnnounce() {
-            levelAnnounce.style.display = 'block';
-            lvlNum.innerText = currentLevel + 1;
-            lvlTitle.innerText = levelData[currentLevel].name;
-            
-            setTimeout(() => {
-                levelAnnounce.style.display = 'none';
-            }, 3000);
+    // ── 5. PUÑETAZO — OPT 3: solo si muñecas visibles ──
+    const lWrist = lm[15], rWrist = lm[16], lElbow = lm[13], rElbow = lm[14];
+    if ((lWrist.visibility||0) > VIS_THRESHOLD || (rWrist.visibility||0) > VIS_THRESHOLD) {
+        const lArmExt = lElbow.y - lWrist.y;
+        const rArmExt = rElbow.y - rWrist.y;
+        if ((lArmExt > 0.15 || rArmExt > 0.15) && now - lastPunchTime > 800) {
+            lastPunchTime = now;
+            triggerPunch();
+            updateMoveIndicator("👊 ¡PUÑETAZO!", true);
         }
-        
-        const pose = new Pose({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
-        });
+    }
+});
 
-        pose.setOptions({
-            modelComplexity: 1, 
-            smoothLandmarks: true,
-            minDetectionConfidence: 0.6,
-            minTrackingConfidence: 0.6
-        });
+function updateMoveIndicator(text, active) {
+    moveIndicator.textContent = text;
+    moveIndicator.classList.toggle('active', active);
+}
 
-        function drawSkeleton(landmarks) {
-            skeletonCanvas.width = video.videoWidth;
-            skeletonCanvas.height = video.videoHeight;
-            sctx.clearRect(0, 0, skeletonCanvas.width, skeletonCanvas.height);
-            
-            sctx.fillStyle = "#00FF00";
-            sctx.strokeStyle = "#00FF00";
-            sctx.lineWidth = 2;
+// ─────────────────────────────────────────────
+// CÁMARA — OPT 2: 320x240 + throttle a 20fps para MediaPipe
+// El juego visual sigue corriendo a 60fps sin cambios
+// ─────────────────────────────────────────────
+let lastPoseTime   = 0;
+const POSE_INTERVAL = 50; // ms → 20fps para MediaPipe
 
-            // Dibujar puntos clave
-            const points = [11, 12, 15, 16, 23, 24, 25, 26, 27, 28];
-            points.forEach(idx => {
-                const lm = landmarks[idx];
-                sctx.beginPath();
-                sctx.arc(lm.x * skeletonCanvas.width, lm.y * skeletonCanvas.height, 4, 0, 2 * Math.PI);
-                sctx.fill();
-            });
+const camera = new Camera(video, {
+    onFrame: async () => {
+        const now = performance.now();
+        if (now - lastPoseTime < POSE_INTERVAL) return; // throttle
+        lastPoseTime = now;
+        await pose.send({ image: video });
+    },
+    width: 320,   // OPT 2: resolución reducida (antes 640)
+    height: 240   // OPT 2: resolución reducida (antes 480)
+});
+
+btnComenzar.onclick = async () => {
+    startScreen.style.display = 'none';
+    loading.style.display = 'flex';
+    try {
+        await camera.start();
+        video.play();
+    } catch(e) {
+        alert("No se pudo acceder a la cámara. Asegurate de dar los permisos.");
+        return;
+    }
+    renderSkinGrid();
+    // La pantalla de skins se muestra cuando la IA carga (en pose.onResults)
+};
+
+// ─────────────────────────────────────────────
+// FLUJO: CALIBRACIÓN → COUNTDOWN → JUEGO
+// ─────────────────────────────────────────────
+function startCalibration() {
+    calibrating = true;
+    calibSamples = [];
+    smoothedLM   = null; // resetear suavizado para calibración limpia
+    calibBarInner.style.width      = '0%';
+    calibBarInner.style.background = '#4ade80';
+    calibStatus.textContent = 'Detectando tu postura...';
+    loading.style.display   = 'none';
+    calibScreen.style.display = 'flex';
+}
+
+function startCountdown() {
+    calibScreen.style.display = 'none';
+    countdownScreen.style.display = 'flex';
+    let count = 3;
+    countdownNum.innerText = count;
+    const timer = setInterval(() => {
+        count--;
+        if (count > 0) {
+            countdownNum.innerText = count;
+        } else {
+            clearInterval(timer);
+            countdownScreen.style.display = 'none';
+            ui.style.display          = 'block';
+            moveIndicator.style.display = 'block';
+            speedBarEl.style.display    = 'block';
+            speedLabelEl.style.display  = 'block';
+            isGameStarted = true;
+            resetStats();
+            startMusic();
         }
-        
-        function drawBackground() {
-            const lvl = levelData[currentLevel];
-            
-            // Cielo Dinámico
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, lvl.sky[0]);
-            gradient.addColorStop(1, lvl.sky[1]);
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }, 1000);
+}
 
-            // Estrellas (Solo en Noche y Espacio)
-            if (currentLevel === 0 || currentLevel === 3) {
-                ctx.fillStyle = "#fff";
-                stars.forEach(star => {
-                    ctx.beginPath();
-                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-                    ctx.fill();
-                });
-            }
+// ─────────────────────────────────────────────
+// UPDATE
+// ─────────────────────────────────────────────
+function update() {
+    if (isGameOver || !isGameStarted) return;
 
-            // Luna o Sol según nivel
-            ctx.font = '80px Arial';
-            if (currentLevel === 3) ctx.fillText("🪐", canvas.width - 200, 150);
-            else if (currentLevel === 2) ctx.fillText("☀️", canvas.width - 150, 100);
-            else ctx.fillText("🌕", canvas.width - 150, 100);
+    checkLevel();
+    updateParticles();
+    renderPowerupBar();
 
-            // Montañas
-            ctx.fillStyle = lvl.ground;
-            ctx.globalAlpha = 0.3;
-            mountains.forEach(mtn => {
-                ctx.beginPath();
-                ctx.moveTo(mtn.x, player.groundY + 40);
-                ctx.lineTo(mtn.x + 400, player.groundY - 150);
-                ctx.lineTo(mtn.x + 800, player.groundY + 40);
-                ctx.fill();
-                mtn.x -= (speed * mtn.speed);
-                if (mtn.x < -800) mtn.x = canvas.width;
-            });
-            ctx.globalAlpha = 1.0;
+    for (let i = popups.length-1; i >= 0; i--) {
+        popups[i].y -= 2; popups[i].life -= 0.02;
+        if (popups[i].life <= 0) popups.splice(i, 1);
+    }
 
-            // Edificios (Solo nivel 1)
-            if (currentLevel === 0) {
-                buildings.forEach(b => {
-                    ctx.fillStyle = "#1e293b";
-                    ctx.fillRect(b.x, player.groundY + 40 - b.height, b.width, b.height);
-                    ctx.fillStyle = "#facc15";
-                    b.windows.forEach(w => {
-                        if (w.lit) ctx.fillRect(b.x + (w.x * (b.width - 10)), (player.groundY + 40 - b.height) + (w.y * (b.height - 10)), 5, 8);
-                    });
-                    b.x -= (speed * b.speed);
-                    if (b.x < -b.width) b.x = canvas.width;
-                });
-            }
-
-            // Nubes
-            ctx.font = '40px Arial';
-            clouds.forEach(cloud => {
-                ctx.fillText(currentLevel === 3 ? "☄️" : "☁️", cloud.x, cloud.y);
-                cloud.x -= (speed * 0.1 + cloud.speed);
-                if (cloud.x < -100) cloud.x = canvas.width + 100;
-            });
-
-            // Árboles o Pinos según nivel
-            ctx.font = '60px Arial';
-            trees.forEach(t => {
-                let decor = "🌳";
-                if (currentLevel === 1) decor = "🌲";
-                if (currentLevel === 2) decor = "🌵";
-                if (currentLevel === 3) decor = "🛰️";
-                
-                ctx.fillText(decor, t.x, player.groundY + 40);
-                t.x -= (speed * t.speed);
-                if (t.x < -100) t.x = canvas.width + 100;
-            });
-
-            // CLIMA
-            drawWeather();
-
-            // Calle
-            ctx.fillStyle = lvl.ground;
-            ctx.fillRect(0, player.groundY + 40, canvas.width, canvas.height - (player.groundY + 40));
-            
-            ctx.strokeStyle = lvl.roadLine;
-            ctx.setLineDash([40, 40]);
-            ctx.lineWidth = 6;
-            ctx.beginPath();
-            ctx.moveTo(0, player.groundY + 120);
-            ctx.lineTo(canvas.width, player.groundY + 120);
-            ctx.lineDashOffset = -roadOffset;
-            ctx.stroke();
-            ctx.setLineDash([]);
-            
-            roadOffset += speed;
+    if (player.isJumping) {
+        player.y += player.vy;
+        player.vy += 0.8;
+        if (player.y >= player.groundY) {
+            player.y = player.groundY; player.isJumping = false;
+            sfxLand();
+            player.vy = 0;
         }
+    }
 
-        function drawWeather() {
-            if (currentLevel === 0) return; // Ciudad despejada
+    if (speed > 0.2) {
+        distance += speed * 0.05;
+        distVal.innerText = Math.floor(distance);
+        updateProgressBar();
+    }
 
-            weather.forEach(p => {
-                if (currentLevel === 1) { // LLUVIA (Bosque)
-                    ctx.strokeStyle = "rgba(173, 216, 230, 0.4)";
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    ctx.moveTo(p.x, p.y);
-                    ctx.lineTo(p.x - 10, p.y + 20);
-                    ctx.stroke();
-                    p.y += p.speed;
-                    p.x -= p.speed * 0.2;
-                } 
-                else if (currentLevel === 2) { // TORMENTA DE ARENA (Desierto)
-                    ctx.fillStyle = "rgba(194, 120, 50, 0.3)";
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                    ctx.fill();
-                    p.x -= (p.speed + speed);
-                }
-                else if (currentLevel === 3) { // POLVO CÓSMICO (Espacio)
-                    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2);
-                    ctx.fill();
-                    p.x -= (p.speed * 0.1 + speed * 0.05);
-                }
-
-                // Reset partículas
-                if (p.y > canvas.height) p.y = -20;
-                if (p.x < -20) p.x = canvas.width + 20;
-                if (p.x > canvas.width + 20) p.x = -20;
-            });
+    // Generar obstáculos
+    if (Math.random() < 0.015) {
+        const lvl = levelData[currentLevel];
+        const roll = Math.random();
+        const lvlBoost = 1 + currentLevel * 0.4;
+        if (roll < 0.28) {
+            obstacles.push({ x:canvas.width, y:player.groundY-90-Math.random()*30, emoji:lvl.aerial[Math.floor(Math.random()*lvl.aerial.length)], isAerial:true, isAnimal:false, baseSpeed:(1.5+Math.random()*2.5)*lvlBoost });
+        } else if (roll < 0.55) {
+            obstacles.push({ x:canvas.width, y:player.groundY, emoji:lvl.animals[Math.floor(Math.random()*lvl.animals.length)], isAerial:false, isAnimal:true, baseSpeed:(2+Math.random()*3)*lvlBoost });
+        } else {
+            obstacles.push({ x:canvas.width, y:player.groundY, emoji:lvl.static[Math.floor(Math.random()*lvl.static.length)], isAerial:false, isAnimal:false, baseSpeed:0 });
         }
+    }
 
-        let lastAnkleY = 0;
-        let lastShoulderY = 0;
-        let canJump = true;
-        let smoothedDelta = 0; // Para el filtro pasa-bajo
+    if (Math.random() < 0.003) spawnPowerup();
 
-        pose.onResults((results) => {
-            if (!iaLoaded && results.poseLandmarks) {
-                iaLoaded = true;
-                loading.style.display = 'none';
-                startCountdown();
-            }
+    // Actualizar obstáculos
+    for (let i = obstacles.length-1; i >= 0; i--) {
+        const obs = obstacles[i];
+        obs.x -= (obs.isAnimal||obs.isAerial) ? speed+obs.baseSpeed : speed;
+        const pY    = isCrouching ? player.groundY+15 : player.y;
+        const hitR  = obs.isAerial ? 38 : 48;
+        const dist2 = Math.sqrt(Math.pow(obs.x-player.x,2) + Math.pow(obs.y-pY,2));
+        const dodge = obs.isAerial && isCrouching;
 
-            if (results.poseLandmarks) {
-                drawSkeleton(results.poseLandmarks);
-                
-                if (isGameStarted && !isGameOver) {
-                    const landmarks = results.poseLandmarks;
-                
-                    // 1. DETECTAR MOVIMIENTO COMBINADO (Pies y Hombros)
-                    const leftAnkle = landmarks[27];
-                    const rightAnkle = landmarks[28];
-                    const currentAnkleY = (leftAnkle.y + rightAnkle.y) / 2;
-
-                    const leftShoulder = landmarks[11];
-                    const rightShoulder = landmarks[12];
-                    const currentShoulderY = (leftShoulder.y + rightShoulder.y) / 2;
-
-                    let rawDelta = 0;
-
-                    // Delta de pies
-                    if (lastAnkleY !== 0) {
-                        rawDelta += Math.abs(currentAnkleY - lastAnkleY) * 1.5;
-                    }
-                    // Delta de hombros (trote)
-                    if (lastShoulderY !== 0) {
-                        rawDelta += Math.abs(currentShoulderY - lastShoulderY) * 1.2;
-                    }
-
-                    // FILTRO PASA-BAJO (Suaviza el ruido de la cámara)
-                    // Promediamos el 80% del valor anterior con el 20% del nuevo
-                    smoothedDelta = (smoothedDelta * 0.8) + (rawDelta * 0.2);
-
-                    // Filtro de ruido y sensibilidad mejorado
-                    if (smoothedDelta > 0.009) { // Umbral aumentado para seguridad
-                        speed = Math.min(speed + smoothedDelta * 10, 12);
-                    } else {
-                        speed *= 0.75; // Frenado más agresivo
-                        if (speed < 0.1) speed = 0;
-                        smoothedDelta = 0; // Resetear filtro al estar quieto
-                    }
-
-                    lastAnkleY = currentAnkleY;
-                    lastShoulderY = currentShoulderY;
-
-                    // 2. DETECTAR SALTO (Compresión Hombros-Rodillas)
-                    const kneeY = (landmarks[25].y + landmarks[26].y) / 2;
-                    const compression = kneeY - currentShoulderY;
-
-                    // Salto más sensible
-                    if (compression < 0.28 && canJump && !player.isJumping) {
-                        player.vy = -20;
-                        player.isJumping = true;
-                        canJump = false;
-                    }
-                    if (compression > 0.32) {
-                        canJump = true;
-                    }
-                }
-            }
-        });
-
-        const camera = new Camera(video, {
-            onFrame: async () => {
-                await pose.send({image: video});
-            },
-            width: 640,
-            height: 480
-        });
-
-        // FLUJO DE INICIO
-        btnComenzar.onclick = async () => {
-            startScreen.style.display = 'none';
-            loading.style.display = 'flex';
-            try {
-                await camera.start();
-                video.play(); // Forzar reproducción en móviles
-            } catch (err) {
-                console.error("Error al iniciar cámara:", err);
-                alert("No se pudo acceder a la cámara. Por favor, asegúrate de dar los permisos.");
-            }
-        };
-
-        function startCountdown() {
-            countdownScreen.style.display = 'flex';
-            let count = 5;
-            countdownNumber.innerText = count;
-            
-            const timer = setInterval(() => {
-                count--;
-                if (count > 0) {
-                    countdownNumber.innerText = count;
-                } else {
-                    clearInterval(timer);
-                    countdownScreen.style.display = 'none';
-                    ui.style.display = 'block';
-                    isGameStarted = true;
-                }
-            }, 1000);
-        }
-
-        // LOGICA DEL JUEGO
-        function update() {
-            if (isGameOver || !isGameStarted) return;
-
-            checkLevel();
-
-            // Actualizar Popups
-            popups.forEach((p, i) => {
-                p.y -= 2;
-                p.life -= 0.02;
-                if (p.life <= 0) popups.splice(i, 1);
-            });
-
-            // Gravedad
-            if (player.isJumping) {
-                player.y += player.vy;
-                player.vy += 0.8; 
-                if (player.y >= player.groundY) {
-                    player.y = player.groundY;
-                    player.isJumping = false;
-                    player.vy = 0;
-                }
-            }
-
-            // Distancia
-            if (speed > 0.2) {
-                distance += speed * 0.05;
-                distVal.innerText = Math.floor(distance);
-                updateProgressBar();
-            }
-
-            // Generar Obstáculos dinámicos por nivel
-            if (Math.random() < 0.015 && isGameStarted) {
-                const lvl = levelData[currentLevel];
-                const isAnimal = Math.random() < 0.4;
-                
-                // Los animales corren más rápido en niveles altos
-                const levelSpeedBoost = 1 + (currentLevel * 0.4); // +40% por nivel
-                
-                obstacles.push({
-                    x: canvas.width,
-                    y: player.groundY,
-                    emoji: isAnimal ? lvl.animals[Math.floor(Math.random() * lvl.animals.length)] : lvl.static[Math.floor(Math.random() * lvl.static.length)],
-                    isAnimal: isAnimal,
-                    baseSpeed: isAnimal ? (2 + Math.random() * 3) * levelSpeedBoost : 0
-                });
-            }
-
-            obstacles.forEach((obs, index) => {
-                const moveSpeed = obs.isAnimal ? (speed + obs.baseSpeed) : speed;
-                obs.x -= moveSpeed;
-
-                const dx = obs.x - player.x;
-                const dy = obs.y - player.y;
-                const collisionDist = Math.sqrt(dx*dx + dy*dy);
-
-                if (collisionDist < 50 && !isInvincible) {
-                    loseLife();
-                }
-                if (obs.x < -100) obstacles.splice(index, 1);
-            });
-        }
-
-        function updateProgressBar() {
-            const currentLvl = levelData[currentLevel];
-            const nextLvl = levelData[currentLevel + 1];
-            if (!nextLvl) {
-                progressBar.style.width = "100%";
-                return;
-            }
-            const range = nextLvl.threshold - currentLvl.threshold;
-            const progress = ((distance - currentLvl.threshold) / range) * 100;
-            progressBar.style.width = Math.min(progress, 100) + "%";
-        }
-
-        function loseLife() {
-            lives--;
-            document.getElementById(`h${lives + 1}`).style.opacity = "0.2";
-            
-            if (lives <= 0) {
-                endGame();
+        if (dist2 < hitR && !isInvincible && !dodge) {
+            if (activePowerups.shield > Date.now()) {
+                spawnParticles(obs.x, obs.y, '#60a5fa', 15);
+                sfxHit();
+                triggerShake(6, 8);
+                activePowerups.shield = 0;
+                renderPowerupBar();
+                [1,2,3].forEach(i => { document.getElementById('h'+i).style.filter = 'drop-shadow(0 0 5px rgba(255,0,0,0.5))'; });
             } else {
-                triggerInvincibility();
+                spawnParticles(obs.x, obs.y, '#ef4444', 18);
+                sfxHit();
+                triggerShake(14, 14);
+                loseLife();
             }
+            obstacles.splice(i, 1);
+            continue;
         }
+        if (obs.x < -100) obstacles.splice(i, 1);
+    }
 
-        function triggerInvincibility() {
-            isInvincible = true;
-            setTimeout(() => {
-                isInvincible = false;
-            }, 2000);
+    // Actualizar power-ups
+    for (let i = powerups.length-1; i >= 0; i--) {
+        const pu = powerups[i];
+        pu.x -= speed; pu.bob += 0.08;
+        const dy = pu.y + Math.sin(pu.bob)*10 - player.y;
+        if (Math.sqrt(Math.pow(pu.x-player.x,2)+dy*dy) < 55) {
+            sfxPowerup();
+            activatePowerup(pu); powerups.splice(i, 1); continue;
         }
+        if (pu.x < -100) powerups.splice(i, 1);
+    }
+}
 
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawBackground();
+function updateProgressBar() {
+    const cur = levelData[currentLevel], nxt = levelData[currentLevel+1];
+    if (!nxt) { progressBar.style.width = "100%"; return; }
+    progressBar.style.width = Math.min(((distance-cur.threshold)/(nxt.threshold-cur.threshold))*100, 100) + '%';
+}
 
-            // Dibujar Obstáculos
-            ctx.font = '50px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            obstacles.forEach(obs => {
-                ctx.fillText(obs.emoji, obs.x, obs.y);
-            });
+function loseLife() {
+    lives--;
+    if (lives >= 0) document.getElementById('h'+(lives+1)).style.opacity = "0.2";
+    if (lives <= 0) triggerDeathEffect(endGame); else triggerInvincibility();
+}
 
-            // Dibujar Jugador (Con parpadeo si es invencible)
-            let showPlayer = true;
-            if (isInvincible && Math.floor(Date.now() / 150) % 2 === 0) {
-                showPlayer = false;
-            }
+function triggerInvincibility() {
+    isInvincible = true;
+    setTimeout(() => { isInvincible = false; }, 2000);
+}
 
-            if (showPlayer) {
-                ctx.font = '80px Arial';
-                let charEmoji = currentLevel === 3 ? "👨‍🚀" : "🏃";
-                if (isPunching) charEmoji = "👊";
-                else if (isKicking) charEmoji = "🦶";
-                ctx.fillText(charEmoji, player.x, player.y);
-            }
+// ─────────────────────────────────────────────
+// DRAW
+// ─────────────────────────────────────────────
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Dibujar Popups (¡KICK! / ¡PUNCH!)
-            popups.forEach(p => {
-                ctx.fillStyle = p.color;
-                ctx.globalAlpha = p.life;
-                ctx.font = 'bold 40px Arial';
-                ctx.fillText(p.text, p.x, p.y);
-                ctx.globalAlpha = 1.0;
-            });
+    // Aplicar shake y zoom de muerte
+    ctx.save();
+    if (shakeX || shakeY || deathZoomActive) {
+        const cx=canvas.width/2, cy=canvas.height/2;
+        ctx.translate(cx+shakeX, cy+shakeY);
+        ctx.scale(deathZoom, deathZoom);
+        ctx.translate(-cx, -cy);
+    }
 
-            requestAnimationFrame(() => {
-                update();
-                draw();
-            });
+    drawBackground();
+    updateTrail();
+    drawTrail();
+
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+    powerups.forEach(pu => {
+        const by = pu.y + Math.sin(pu.bob)*10;
+        ctx.save(); ctx.shadowColor = pu.color; ctx.shadowBlur = 15;
+        ctx.font = '40px Arial'; ctx.fillText(pu.emoji, pu.x, by); ctx.restore();
+        ctx.fillStyle = pu.color; ctx.font = 'bold 12px Arial';
+        ctx.fillText(pu.label, pu.x, by-28);
+    });
+
+    ctx.font = '50px Arial';
+    obstacles.forEach(obs => { ctx.fillText(obs.emoji, obs.x, obs.y); });
+
+    drawParticles();
+
+    const pY = isCrouching ? player.groundY+15 : player.y;
+    const show = !(isInvincible && Math.floor(Date.now()/150)%2===0);
+    if (show) {
+        ctx.save();
+        if (activePowerups.speed      > Date.now()) { ctx.shadowColor='#fbbf24'; ctx.shadowBlur=20; }
+        if (activePowerups.shield     > Date.now()) { ctx.shadowColor='#60a5fa'; ctx.shadowBlur=25; }
+        if (activePowerups.doubleJump > Date.now()) { ctx.shadowColor='#a78bfa'; ctx.shadowBlur=15; }
+        ctx.font = isCrouching ? '60px Arial' : '80px Arial';
+        ctx.fillText(getPlayerEmoji(), player.x, pY);
+        ctx.restore();
+    }
+
+    popups.forEach(p => {
+        ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+        ctx.font = 'bold 38px Arial'; ctx.fillText(p.text, p.x, p.y);
+        ctx.globalAlpha = 1.0;
+    });
+
+    ctx.restore(); // fin de shake/zoom
+
+    requestAnimationFrame(() => { update(); draw(); });
+}
+
+function endGame() {
+    isGameOver = true;
+    stopMusic(); sfxDeath();
+    moveIndicator.style.display = 'none';
+    speedBarEl.style.display    = 'none';
+    speedLabelEl.style.display  = 'none';
+    comboCounter.style.display  = 'none';
+    const d = Math.floor(distance);
+    showStats();
+    checkUnlocks(d);
+    if (d > highScore) {
+        highScore = d;
+        localStorage.setItem('runnerHighScore', highScore);
+        newRecordMsg.style.display = 'block';
+    }
+    setTimeout(() => { gameOverEl.style.display = 'flex'; }, 700);
+}
+
+// ─────────────────────────────────────────────
+// BACKGROUND
+// ─────────────────────────────────────────────
+function drawBackground() {
+    const lvl = levelData[currentLevel];
+    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grad.addColorStop(0, lvl.sky[0]); grad.addColorStop(1, lvl.sky[1]);
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (currentLevel===0||currentLevel===3) {
+        ctx.fillStyle = "#fff";
+        stars.forEach(s => { ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill(); });
+    }
+
+    ctx.font = '80px Arial';
+    if (currentLevel===3) ctx.fillText("🪐", canvas.width-200, 150);
+    else if (currentLevel===2) ctx.fillText("☀️", canvas.width-150, 100);
+    else ctx.fillText("🌕", canvas.width-150, 100);
+
+    ctx.fillStyle = lvl.ground; ctx.globalAlpha = 0.3;
+    mountains.forEach(m => {
+        ctx.beginPath(); ctx.moveTo(m.x, player.groundY+40); ctx.lineTo(m.x+400, player.groundY-150); ctx.lineTo(m.x+800, player.groundY+40); ctx.fill();
+        m.x -= speed * m.speed; if (m.x < -800) m.x = canvas.width;
+    });
+    ctx.globalAlpha = 1.0;
+
+    if (currentLevel===0) {
+        buildings.forEach(b => {
+            ctx.fillStyle = "#1e293b"; ctx.fillRect(b.x, player.groundY+40-b.height, b.width, b.height);
+            ctx.fillStyle = "#facc15";
+            b.windows.forEach(w => { if(w.lit) ctx.fillRect(b.x+w.x*(b.width-10), (player.groundY+40-b.height)+w.y*(b.height-10), 5, 8); });
+            b.x -= speed*b.speed; if (b.x < -b.width) b.x = canvas.width;
+        });
+    }
+
+    ctx.font = '40px Arial';
+    clouds.forEach(c => {
+        ctx.fillText(currentLevel===3?"☄️":"☁️", c.x, c.y);
+        c.x -= speed*0.1 + c.speed; if (c.x < -100) c.x = canvas.width+100;
+    });
+
+    ctx.font = '60px Arial';
+    trees.forEach(t => {
+        ctx.fillText(["🌳","🌲","🌵","🛰️"][currentLevel], t.x, player.groundY+40);
+        t.x -= speed*t.speed; if (t.x < -100) t.x = canvas.width+100;
+    });
+
+    drawWeather();
+
+    ctx.fillStyle = lvl.ground;
+    ctx.fillRect(0, player.groundY+40, canvas.width, canvas.height-player.groundY-40);
+    ctx.strokeStyle = lvl.roadLine; ctx.setLineDash([40,40]); ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(0, player.groundY+120); ctx.lineTo(canvas.width, player.groundY+120);
+    ctx.lineDashOffset = -roadOffset; ctx.stroke(); ctx.setLineDash([]);
+    roadOffset += speed;
+}
+
+function drawWeather() {
+    if (currentLevel===0) return;
+    weather.forEach(p => {
+        if (currentLevel===1) {
+            ctx.strokeStyle = "rgba(173,216,230,0.4)"; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-10,p.y+20); ctx.stroke();
+            p.y += p.speed; p.x -= p.speed*0.2;
+        } else if (currentLevel===2) {
+            ctx.fillStyle = "rgba(194,120,50,0.3)";
+            ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+            p.x -= p.speed + speed;
+        } else {
+            ctx.fillStyle = "rgba(255,255,255,0.5)";
+            ctx.beginPath(); ctx.arc(p.x,p.y,p.size*0.5,0,Math.PI*2); ctx.fill();
+            p.x -= p.speed*0.1 + speed*0.05;
         }
+        if (p.y > canvas.height) p.y = -20;
+        if (p.x < -20) p.x = canvas.width+20;
+        if (p.x > canvas.width+20) p.x = -20;
+    });
+}
 
-        function endGame() {
-            isGameOver = true;
-            const currentDist = Math.floor(distance);
-            finalDist.innerText = currentDist;
-            
-            if (currentDist > highScore) {
-                highScore = currentDist;
-                localStorage.setItem('runnerHighScore', highScore);
-                newRecordMsg.style.display = 'block';
-            }
-            
-            gameOver.style.display = 'flex';
-        }
-
-        window.addEventListener('resize', init);
-        init();
-        draw();
-
-    </script>
+// ─────────────────────────────────────────────
+// ARRANQUE
+// ─────────────────────────────────────────────
+window.addEventListener('resize', init);
+init();
+draw();
+</script>
 </body>
 </html>
