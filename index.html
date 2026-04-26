@@ -13,8 +13,10 @@
         #video-container { position: absolute; top: 80px; left: 20px; width: 120px; height: 90px; border: 2px solid #444; border-radius: 10px; overflow: hidden; transform: scaleX(-1); z-index: 500; background: #000; opacity: 0.75; }
         #video-preview { width: 100%; height: 100%; object-fit: cover; display: block; }
         #skeleton-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; background: transparent; }
-        #ui { position: absolute; top: 20px; left: 20px; z-index: 10; display: none; }
-        .stat-card { background: rgba(20,20,30,0.85); padding: 15px 25px; border-radius: 12px; border: 1px solid #333; color: white; backdrop-filter: blur(5px); }
+        #ui { position: absolute; top: 10px; left: 10px; z-index: 10; display: none; }
+        .stat-card { background: rgba(20,20,30,0.85); padding: clamp(6px,1.5vw,15px) clamp(10px,2vw,25px); border-radius: 12px; border: 1px solid #333; color: white; backdrop-filter: blur(5px); }
+        .stat-card p:first-child { font-size: clamp(0.55rem,1.2vw,0.75rem); font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
+        .stat-card p:last-child { font-size: clamp(1.6rem,4vw,2.5rem); font-weight: 900; margin: 0; line-height: 1.1; }
         #loading { position: fixed; inset: 0; background: #0a0a0f; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; color: white; }
         #game-over { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 200; color: white; text-align: center; }
         #start-screen { position: fixed; inset: 0; background: #0a0a0f; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 300; text-align: center; padding: 20px; color: white; overflow-y: auto; }
@@ -63,24 +65,101 @@
         #tut-detect-bar-outer { width:100%; height:10px; background:rgba(255,255,255,0.1); border-radius:5px; overflow:hidden; margin-top:16px; }
         #tut-detect-bar { height:100%; width:0%; background:#4ade80; border-radius:5px; transition:width 0.1s; }
 
+        /* ── PAUSA ── */
+        #pause-screen { position:fixed; inset:0; background:rgba(10,10,15,0.92); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:800; color:white; text-align:center; backdrop-filter:blur(8px); }
+        #pause-screen h2 { font-size:3.5rem; font-weight:900; margin-bottom:8px; }
+        #pause-screen p { color:#9ca3af; margin-bottom:32px; font-size:1rem; }
+        .pause-btn { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:14px; padding:16px 40px; color:white; font-size:1.1rem; font-weight:700; cursor:pointer; margin:6px 0; width:240px; transition:all 0.2s; }
+        .pause-btn:hover { background:rgba(255,255,255,0.15); transform:scale(1.03); }
+        .pause-btn.primary { background:white; color:black; border-color:white; }
+        .pause-btn.primary:hover { background:#e5e7eb; }
+        #pause-btn-float { position:fixed; top:20px; right:20px; background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.2); border-radius:10px; color:white; font-size:1.4rem; padding:6px 12px; cursor:pointer; z-index:1002; display:none; transition:all 0.2s; }
+        #pause-btn-float:hover { background:rgba(255,255,255,0.15); }
+
         /* ── SKIN SELECTOR ── */
-        #skin-screen { position:fixed; inset:0; background:rgba(10,10,15,0.97); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:310; color:white; text-align:center; padding:20px; }
-        .skin-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:20px 0; max-width:440px; }
-        .skin-card { background:rgba(255,255,255,0.06); border:2px solid rgba(255,255,255,0.12); border-radius:16px; padding:16px 8px; cursor:pointer; transition:all 0.2s; position:relative; }
+        #skin-screen { position:fixed; inset:0; background:rgba(10,10,15,0.97); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:310; color:white; text-align:center; padding:20px; overflow-y:auto; }
+        .skin-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:12px 0; max-width:440px; width:100%; }
+        .skin-card { background:rgba(255,255,255,0.06); border:2px solid rgba(255,255,255,0.12); border-radius:16px; padding:12px 8px; cursor:pointer; transition:all 0.2s; position:relative; }
         .skin-card:hover { transform:scale(1.05); }
         .skin-card.selected { border-color:#fbbf24; background:rgba(251,191,36,0.15); }
         .skin-card.locked { opacity:0.4; cursor:not-allowed; }
-        .skin-card .skin-emoji { font-size:2.5rem; display:block; }
-        .skin-card .skin-name { font-size:0.7rem; color:#d1d5db; margin-top:4px; display:block; }
-        .skin-card .skin-req { font-size:0.6rem; color:#6b7280; display:block; }
-        .skin-lock { position:absolute; top:6px; right:8px; font-size:0.8rem; }
+        .skin-card .skin-emoji { font-size:2rem; display:block; }
+        .skin-card .skin-name { font-size:0.65rem; color:#d1d5db; margin-top:4px; display:block; }
+        .skin-card .skin-req { font-size:0.55rem; color:#6b7280; display:block; }
+        .skin-lock { position:absolute; top:4px; right:6px; font-size:0.7rem; }
 
         /* ── STATS ── */
-        .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0; max-width:400px; width:100%; }
-        .stat-box { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:14px; text-align:center; }
-        .stat-box .s-val { font-size:2rem; font-weight:900; display:block; }
-        .stat-box .s-lbl { font-size:0.7rem; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; }
-        .unlock-banner { background:rgba(251,191,36,0.15); border:1px solid #fbbf24; border-radius:12px; padding:10px 20px; color:#fbbf24; font-weight:800; margin:8px 0; display:none; }
+        .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0; max-width:400px; width:100%; }
+        .stat-box { background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:14px; padding:12px; text-align:center; }
+        .stat-box .s-val { font-size:1.6rem; font-weight:900; display:block; }
+        .stat-box .s-lbl { font-size:0.65rem; color:#9ca3af; text-transform:uppercase; letter-spacing:1px; }
+        .unlock-banner { background:rgba(251,191,36,0.15); border:1px solid #fbbf24; border-radius:12px; padding:8px 16px; color:#fbbf24; font-weight:800; margin:6px 0; display:none; font-size:0.9rem; }
+
+        /* ── SELECTOR DE MODO ── */
+        .mode-selector { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0; }
+        .mode-card { background:rgba(255,255,255,0.06); border:2px solid rgba(255,255,255,0.12); border-radius:14px; padding:12px 8px; cursor:pointer; transition:all 0.2s; text-align:center; }
+        .mode-card:hover { transform:scale(1.03); border-color:rgba(255,255,255,0.3); }
+        .mode-card.selected { border-color:#fbbf24; background:rgba(251,191,36,0.12); }
+        .mode-card .mode-emoji { font-size:2rem; display:block; margin-bottom:4px; }
+        .mode-card .mode-name { font-size:0.95rem; font-weight:800; display:block; }
+        .mode-card .mode-hint { font-size:0.65rem; color:#9ca3af; display:block; margin-top:2px; }
+
+        /* ── RESPONSIVE ── */
+        /* Celular chico (< 480px) */
+        @media (max-width: 480px) {
+            #progress-container { width: 160px; height: 8px; top: 10px; }
+            #lives-container { font-size: 1.2rem; top: 10px; right: 10px; gap: 4px; }
+            #powerup-bar { top: 38px; right: 10px; }
+            #pause-btn-float { top: 10px; right: 10px; font-size: 1rem; padding: 4px 8px; }
+            #video-container { width: 80px; height: 60px; top: 50px; left: 8px; }
+            #ui { top: 10px; left: 8px; }
+            .stat-card { padding: 8px 14px; }
+            .stat-card p:first-child { font-size: 0.6rem; }
+            .stat-card p:last-child { font-size: 2rem; }
+            #move-indicator { font-size: 1rem; padding: 8px 16px; min-width: 160px; bottom: 16px; }
+            #speed-bar { bottom: 60px; height: 80px; }
+            #speed-label { bottom: 52px; }
+            #combo-counter .combo-num { font-size: 2.5rem; }
+            .lvl-text { font-size: 2.8rem; }
+            .lvl-name { font-size: 1.2rem; }
+            #combo-display { font-size: 2rem; }
+            .pause-btn { width: 200px; padding: 12px 20px; font-size: 0.95rem; }
+            #calib-bar-outer { width: 260px; }
+            .tut-move-box { padding: 16px 20px; }
+            .skin-grid { grid-template-columns: repeat(4,1fr); gap: 6px; }
+            .skin-card .skin-emoji { font-size: 1.5rem; }
+        }
+
+        /* Celular mediano (480–768px) */
+        @media (min-width: 481px) and (max-width: 768px) {
+            #progress-container { width: 220px; }
+            #lives-container { font-size: 1.4rem; right: 15px; }
+            #video-container { width: 100px; height: 75px; }
+            #move-indicator { font-size: 1.1rem; }
+        }
+
+        /* Pantalla grande (> 1200px) */
+        @media (min-width: 1200px) {
+            #video-container { width: 160px; height: 120px; }
+            .stat-card p:last-child { font-size: 3rem; }
+            #move-indicator { font-size: 1.6rem; padding: 14px 32px; }
+        }
+
+        /* Landscape celular */
+        @media (max-height: 500px) {
+            #start-screen { padding: 10px; justify-content: flex-start; padding-top: 10px; }
+            #start-screen .text-5xl { display: none; }
+            #start-screen h1 { font-size: 1.3rem; margin-bottom: 4px; }
+            .mode-selector { margin: 6px 0; }
+            .move-guide { gap: 4px; margin-top: 4px; }
+            .move-item { padding: 5px 8px !important; }
+            .btn-start { padding: 0.6rem 1.8rem !important; font-size: 1rem !important; margin-top: 6px !important; }
+            #pause-screen h2 { font-size: 2rem; }
+            #pause-screen p { margin-bottom: 12px; }
+            .pause-btn { padding: 10px 20px; margin: 3px 0; }
+            .tut-move-box { padding: 12px 16px; }
+            #calib-bar-outer { margin-top: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -101,6 +180,27 @@
 <div id="speed-bar"><div id="speed-fill"></div></div>
 <div id="speed-label">VEL</div>
 
+<!-- BOTÓN PAUSA FLOTANTE -->
+<button id="pause-btn-float" onclick="togglePause()">⏸</button>
+
+<!-- PANTALLA DE PAUSA -->
+<div id="pause-screen">
+    <div class="text-6xl mb-4">⏸️</div>
+    <h2>PAUSA</h2>
+    <p>El juego está pausado</p>
+    <div id="pause-stats" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px 32px;margin-bottom:24px;min-width:240px;">
+        <div style="font-size:2rem;font-weight:900;" id="pause-dist">0m</div>
+        <div style="font-size:0.75rem;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;">Distancia actual</div>
+        <div style="margin-top:8px;display:flex;gap:16px;justify-content:center;font-size:0.85rem;color:#d1d5db;">
+            <span>🦶 <span id="pause-kicks">0</span></span>
+            <span>👊 <span id="pause-punches">0</span></span>
+            <span>⬆️ <span id="pause-jumps">0</span></span>
+        </div>
+    </div>
+    <button class="pause-btn primary" onclick="togglePause()">▶ CONTINUAR</button>
+    <button class="pause-btn" onclick="resetGame()">🔄 Reiniciar</button>
+</div>
+
 <div id="combo-counter">
     <div class="combo-num" id="combo-num">0</div>
     <div class="combo-label">COMBO</div>
@@ -109,20 +209,39 @@
 
 <div id="start-screen">
     <div class="max-w-md w-full">
-        <div class="text-7xl mb-3">🌃</div>
-        <h1 class="text-4xl font-black mb-2 uppercase">Ponete Fit en Movimiento</h1>
-        <p class="text-lg text-gray-400 mb-1">Récord Actual: <b id="high-score-start" class="text-white">0</b>m</p>
-        <p class="text-gray-500 mb-3 uppercase text-xs tracking-widest">Pone el celular para que se te vea todo el cuerpo</p>
-        <div class="move-guide">
-            <div class="move-item"><span class="move-icon">🏃</span><div class="move-desc"><b>Correr</b>Movete en el lugar para avanzar</div></div>
-            <div class="move-item"><span class="move-icon">⬇️</span><div class="move-desc"><b>Agacharse</b>Bajate para esquivar pájaros y murciélagos</div></div>
-            <div class="move-item"><span class="move-icon">⬆️</span><div class="move-desc"><b>Saltar</b>Doblá las rodillas y saltá</div></div>
-            <div class="move-item"><span class="move-icon">🦶</span><div class="move-desc"><b>Patada</b>Levantá una rodilla bien arriba</div></div>
-            <div class="move-item"><span class="move-icon">👊</span><div class="move-desc"><b>Puñetazo</b>Extendé un brazo hacia adelante</div></div>
-            <div class="move-item"><span class="move-icon">💥</span><div class="move-desc"><b>COMBO</b>Patada + Puñetazo = destruye el obstáculo más cercano</div></div>
+        <div class="text-5xl mb-2">🌃</div>
+        <h1 class="text-3xl font-black mb-1 uppercase">Ponete Fit en Movimiento</h1>
+        <p class="text-base text-gray-400 mb-1">Récord: <b id="high-score-start" class="text-white">0</b>m</p>
+        <p class="text-gray-500 mb-2 uppercase text-xs tracking-widest">¿Cómo vas a jugar?</p>
+        <div class="mode-selector" style="gap:8px;margin-bottom:10px;">
+            <div class="mode-card selected" id="mode-standing" onclick="selectMode('standing')" style="padding:12px 8px;">
+                <span class="mode-emoji" style="font-size:2rem;">🧍</span>
+                <span class="mode-name">De pie</span>
+                <span class="mode-hint">Cuerpo completo visible</span>
+            </div>
+            <div class="mode-card" id="mode-sitting" onclick="selectMode('sitting')" style="padding:12px 8px;">
+                <span class="mode-emoji" style="font-size:2rem;">🪑</span>
+                <span class="mode-name">Sentado</span>
+                <span class="mode-hint">Brazos y torso visibles</span>
+            </div>
         </div>
-        <p class="text-xs text-gray-600 mt-3">Power-ups: 🛡️ Escudo &nbsp;⚡ Turbo &nbsp;🪂 Doble Salto</p>
-        <button id="btn-comenzar" class="btn-start">EMPEZAR</button>
+        <div class="move-guide" id="move-guide-standing" style="gap:6px;margin-top:0;">
+            <div class="move-item" style="padding:7px 10px;"><span class="move-icon" style="font-size:1.3rem;">🏃</span><div class="move-desc"><b>Correr</b>Movete en el lugar</div></div>
+            <div class="move-item" style="padding:7px 10px;"><span class="move-icon" style="font-size:1.3rem;">⬆️</span><div class="move-desc"><b>Saltar</b>Doblá las rodillas</div></div>
+            <div class="move-item" style="padding:7px 10px;"><span class="move-icon" style="font-size:1.3rem;">⬇️</span><div class="move-desc"><b>Agacharse</b>Bajate</div></div>
+            <div class="move-item" style="padding:7px 10px;"><span class="move-icon" style="font-size:1.3rem;">🦶</span><div class="move-desc"><b>Patada</b>Rodilla arriba</div></div>
+            <div class="move-item" style="padding:7px 10px;"><span class="move-icon" style="font-size:1.3rem;">👊</span><div class="move-desc"><b>Puñetazo</b>Brazo adelante</div></div>
+            <div class="move-item" style="padding:7px 10px;"><span class="move-icon" style="font-size:1.3rem;">💥</span><div class="move-desc"><b>Combo</b>Patada + Puñetazo</div></div>
+        </div>
+        <div class="move-guide" id="move-guide-sitting" style="display:none;gap:6px;margin-top:0;">
+            <div class="move-item" style="padding:7px 10px;"><span class="move-icon" style="font-size:1.3rem;">🤷</span><div class="move-desc"><b>Correr</b>Mover hombros arriba/abajo</div></div>
+            <div class="move-item" style="padding:7px 10px;"><span class="move-icon" style="font-size:1.3rem;">🦅</span><div class="move-desc"><b>Saltar</b>Brazos hacia los costados</div></div>
+            <div class="move-item" style="padding:7px 10px;"><span class="move-icon" style="font-size:1.3rem;">⬇️</span><div class="move-desc"><b>Agacharse</b>Inclinarte adelante</div></div>
+            <div class="move-item" style="padding:7px 10px;"><span class="move-icon" style="font-size:1.3rem;">✋</span><div class="move-desc"><b>Mano arriba</b>Una mano sobre el hombro</div></div>
+            <div class="move-item" style="padding:7px 10px;"><span class="move-icon" style="font-size:1.3rem;">👊</span><div class="move-desc"><b>Puñetazo</b>Brazo adelante</div></div>
+            <div class="move-item" style="padding:7px 10px;"><span class="move-icon" style="font-size:1.3rem;">💥</span><div class="move-desc"><b>Combo</b>Mano arriba + Puñetazo</div></div>
+        </div>
+        <button id="btn-comenzar" class="btn-start" style="padding:1rem 2.5rem;font-size:1.2rem;margin-top:0.8rem;">EMPEZAR</button>
     </div>
 </div>
 
@@ -163,7 +282,7 @@
         <div class="stat-box"><span class="s-val" id="stat-jumps">0</span><span class="s-lbl">Saltos</span></div>
         <div class="stat-box"><span class="s-val" id="stat-cals">0</span><span class="s-lbl">Cal. Est.</span></div>
     </div>
-    <button onclick="location.reload()" class="bg-white text-black px-8 py-3 rounded-full font-bold text-xl hover:bg-gray-200 transition mt-4">REINTENTAR</button>
+    <button onclick="resetGame()" class="bg-white text-black px-8 py-3 rounded-full font-bold text-xl hover:bg-gray-200 transition mt-4">REINTENTAR</button>
 </div>
 
 <div id="calibration-screen">
@@ -181,16 +300,9 @@
 </div>
 
 <div id="loading">
-    <div class="text-6xl mb-4 animate-bounce">🏃</div>
-    <h1 class="text-2xl font-bold">CARGANDO IA...</h1>
-    <p class="text-gray-500">Ponte frente a la cámara</p>
-</div>
-
-<div id="game-over">
-    <h2 class="text-6xl font-black mb-4">¡FIN DEL JUEGO!</h2>
-    <p class="text-2xl mb-2">Distancia: <span id="final-dist">0</span>m</p>
-    <p class="text-xl text-yellow-400 font-bold mb-8" id="new-record-msg" style="display:none">¡NUEVO RÉCORD PERSONAL!</p>
-    <button onclick="location.reload()" class="bg-white text-black px-8 py-4 rounded-full font-bold text-xl hover:bg-gray-200 transition">REINTENTAR</button>
+    <div class="text-6xl mb-4 animate-bounce">📷</div>
+    <h1 class="text-2xl font-bold mb-2">INICIANDO...</h1>
+    <p id="load-status" class="text-gray-400 text-sm">Preparando...</p>
 </div>
 
 <div id="ui">
@@ -225,6 +337,7 @@ const sctx           = skeletonCanvas.getContext('2d');
 const distVal        = document.getElementById('dist-val');
 const finalDist      = document.getElementById('final-dist');
 const loading        = document.getElementById('loading');
+const loadStatus     = document.getElementById('load-status');
 const gameOverEl     = document.getElementById('game-over');
 const startScreen    = document.getElementById('start-screen');
 const calibScreen    = document.getElementById('calibration-screen');
@@ -262,6 +375,44 @@ const skinScreen     = document.getElementById('skin-screen');
 const skinGrid       = document.getElementById('skin-grid');
 const btnSkinOk      = document.getElementById('btn-skin-ok');
 const unlockBanner   = document.getElementById('unlock-banner');
+const pauseScreen    = document.getElementById('pause-screen');
+const pauseBtnFloat  = document.getElementById('pause-btn-float');
+
+// ─────────────────────────────────────────────
+// PAUSA
+// ─────────────────────────────────────────────
+function togglePause() {
+    if (!isGameStarted || isGameOver) return;
+    isPaused = !isPaused;
+    pauseScreen.style.display = isPaused ? 'flex' : 'none';
+    pauseBtnFloat.textContent = isPaused ? '▶' : '⏸';
+    if (isPaused) {
+        stopMusic();
+        // Mostrar stats en pausa
+        document.getElementById('pause-dist').textContent     = Math.floor(distance) + 'm';
+        document.getElementById('pause-kicks').textContent    = statKicks;
+        document.getElementById('pause-punches').textContent  = statPunches;
+        document.getElementById('pause-jumps').textContent    = statJumps;
+        playTone(300, 'sine', 0.1, 0.15);
+    } else {
+        startMusic();
+        playTone(500, 'sine', 0.1, 0.15);
+    }
+}
+
+// ─────────────────────────────────────────────
+// MODO DE JUEGO (parado / sentado)
+// ─────────────────────────────────────────────
+let gameMode = 'standing'; // 'standing' | 'sitting'
+
+function selectMode(mode) {
+    gameMode = mode;
+    document.getElementById('mode-standing').classList.toggle('selected', mode==='standing');
+    document.getElementById('mode-sitting').classList.toggle('selected', mode==='sitting');
+    document.getElementById('move-guide-standing').style.display = mode==='standing' ? 'grid' : 'none';
+    document.getElementById('move-guide-sitting').style.display  = mode==='sitting'  ? 'grid' : 'none';
+    // NO borrar tutorialDone — solo se resetea si el usuario lo pide explícitamente
+}
 
 // ─────────────────────────────────────────────
 // AUDIO ENGINE (Web Audio API — sin librerías)
@@ -478,13 +629,21 @@ btnSkinOk.onclick=()=>{
 // ─────────────────────────────────────────────
 // TUTORIAL CON DETECCIÓN REAL
 // ─────────────────────────────────────────────
-const TUT_STEPS=[
+const TUT_STEPS_STANDING=[
     { id:'run',    emoji:'🏃', title:'CORRER',    desc:'Movete en el lugar rápido',       color:'#4ade80' },
     { id:'jump',   emoji:'⬆️', title:'SALTAR',    desc:'Doblá las rodillas y saltá',      color:'#60a5fa' },
     { id:'crouch', emoji:'⬇️', title:'AGACHARSE', desc:'Bajate bien, doblá el torso',     color:'#f97316' },
     { id:'kick',   emoji:'🦶', title:'PATADA',    desc:'Levantá una rodilla bien arriba', color:'#ef4444' },
     { id:'punch',  emoji:'👊', title:'PUÑETAZO',  desc:'Extendé un brazo hacia adelante', color:'#a855f7' },
 ];
+const TUT_STEPS_SITTING=[
+    { id:'run',    emoji:'🤷', title:'CORRER',    desc:'Mové los hombros arriba y abajo',  color:'#4ade80' },
+    { id:'jump',   emoji:'🦅', title:'SALTAR',    desc:'Abrí los brazos hacia los costados', color:'#60a5fa' },
+    { id:'crouch', emoji:'⬇️', title:'AGACHARSE', desc:'Inclinarte hacia adelante',        color:'#f97316' },
+    { id:'kick',   emoji:'✋', title:'MANO ARRIBA', desc:'Levantá una mano por encima del hombro', color:'#ef4444' },
+    { id:'punch',  emoji:'👊', title:'PUÑETAZO',  desc:'Extendé un brazo hacia adelante',  color:'#a855f7' },
+];
+const getTutSteps = () => gameMode==='sitting' ? TUT_STEPS_SITTING : TUT_STEPS_STANDING;
 let tutStep=0, tutDetected=false, tutDetectProgress=0, isTutorialActive=false;
 
 function startTutorial() {
@@ -495,7 +654,7 @@ function startTutorial() {
 
 function renderTutProgress() {
     tutProgress.innerHTML='';
-    TUT_STEPS.forEach((_,i)=>{
+    getTutSteps().forEach((_,i)=>{
         const dot=document.createElement('div');
         dot.className='tut-dot'+(i<tutStep?' done':i===tutStep?' active':'');
         tutProgress.appendChild(dot);
@@ -503,7 +662,7 @@ function renderTutProgress() {
 }
 
 function showTutStep(i) {
-    const s=TUT_STEPS[i];
+    const s=getTutSteps()[i];
     tutEmoji.textContent=s.emoji; tutTitle.textContent=s.title; tutDesc.textContent=s.desc;
     tutDetectBar.style.width='0%'; tutDetectBar.style.background=s.color;
     tutFeedback.textContent=''; tutBox.classList.remove('detected');
@@ -515,7 +674,7 @@ function tutAdvance() {
     playTone(600,'sine',0.15,0.3); playTone(800,'sine',0.1,0.25,0.1);
     setTimeout(()=>{
         tutStep++;
-        if(tutStep>=TUT_STEPS.length){
+        if(tutStep>=getTutSteps().length){
             isTutorialActive=false; tutorialScreen.style.display='none';
             localStorage.setItem('tutorialDone','1'); startCalibration();
         } else { showTutStep(tutStep); }
@@ -524,22 +683,49 @@ function tutAdvance() {
 
 function processTutorialDetection(lm, sd) {
     if(!isTutorialActive||tutDetected) return;
-    const step=TUT_STEPS[tutStep];
+    const step=getTutSteps()[tutStep];
     let hit=false;
-    if(step.id==='run')    hit=sd>0.012;
-    if(step.id==='jump'){  const kY=(lm[25].y+lm[26].y)/2,sY=(lm[11].y+lm[12].y)/2; hit=(kY-sY)<0.25; }
-    if(step.id==='crouch'){ 
-        const sY=(lm[11].y+lm[12].y)/2; 
-        if(!baseShoulderY) baseShoulderY = sY; // Establecer base temporal si no hay calibración
-        hit=(sY-baseShoulderY)>0.12; 
+
+    if (gameMode==='standing') {
+        if(step.id==='run')    hit=sd>0.012;
+        if(step.id==='jump'){  const kY=(lm[25].y+lm[26].y)/2,sY=(lm[11].y+lm[12].y)/2; hit=(kY-sY)<0.25; }
+        if(step.id==='crouch'){ const sY=(lm[11].y+lm[12].y)/2; hit=baseShoulderY ? (sY-baseShoulderY)>0.10 : sY>0.55; }
+        if(step.id==='kick'){  const l=lm[23].y-lm[25].y,r=lm[24].y-lm[26].y; hit=l>0.15||r>0.15; }
+        if(step.id==='punch'){ const l=lm[13].y-lm[15].y,r=lm[14].y-lm[16].y; hit=l>0.18||r>0.18; }
+    } else {
+        // MODO SENTADO
+        if(step.id==='run')    hit=sd>0.010;
+        if(step.id==='jump'){  // brazos abiertos hacia los costados
+            const lSpr = lm[13].x - lm[15].x; // codo más adentro que muñeca izquierda
+            const rSpr = lm[16].x - lm[14].x; // muñeca derecha más afuera que codo
+            hit = lSpr > 0.06 && rSpr > 0.06;
+        }
+        if(step.id==='crouch'){ // nariz se aleja de posición normal (inclinación)
+            const noseY=lm[0].y, sY=(lm[11].y+lm[12].y)/2;
+            hit=(noseY-sY) < -0.05; // nariz muy cerca o por debajo de hombros = inclinado
+        }
+        if(step.id==='kick'){
+            // Sentado: una mano sube sobre el hombro (no las dos)
+            const sYT=(lm[11].y+lm[12].y)/2;
+            const lUp=(lm[15].visibility||0)>0.4 && lm[15].y < sYT-0.08;
+            const rUp=(lm[16].visibility||0)>0.4 && lm[16].y < sYT-0.08;
+            hit=(lUp||rUp)&&!(lUp&&rUp);
+        }
+        if(step.id==='punch'){
+            const sY=(lm[11].y+lm[12].y)/2;
+            const bothUp=(lm[15].y<sY-0.10)&&(lm[16].y<sY-0.10);
+            const l=lm[13].y-lm[15].y,r=lm[14].y-lm[16].y;
+            hit=!bothUp&&(l>0.18||r>0.18); // un brazo extendido, no los dos arriba
+        }
     }
-    if(step.id==='kick'){  const l=lm[23].y-lm[25].y,r=lm[24].y-lm[26].y; hit=l>0.15||r>0.15; }
-    if(step.id==='punch'){ const l=lm[13].y-lm[15].y,r=lm[14].y-lm[16].y; hit=l>0.18||r>0.18; }
+
     tutDetectProgress=Math.min(Math.max(tutDetectProgress+(hit?8:-3),0),100);
     tutDetectBar.style.width=tutDetectProgress+'%';
     if(tutDetectProgress>=100&&!tutDetected){ tutDetected=true; tutAdvance(); }
 }
+let isGameOver    = false;
 let isGameStarted = false;
+let isPaused      = false;
 let distance      = 0;
 let speed         = 0;
 let obstacles     = [];
@@ -840,6 +1026,7 @@ function drawSkeleton(lm) {
 // DETECCIÓN DE MOVIMIENTO
 // ─────────────────────────────────────────────
 let lastAnkleY=0, lastShoulderY=0, smoothedDelta=0;
+let lastWristY=0, lastElbowY=0; // para modo sentado
 let canJump=true;
 let lastKickTime=0, lastPunchTime=0, lastCrouchTime=0;
 
@@ -876,6 +1063,7 @@ pose.onResults(results => {
     // ── PRIMERA DETECCIÓN ──
     if (!iaLoaded && results.poseLandmarks) {
         iaLoaded = true;
+        if (window._loadTimeout) clearTimeout(window._loadTimeout);
         loading.style.display = 'none';
         renderSkinGrid();
         skinScreen.style.display = 'flex';
@@ -887,10 +1075,7 @@ pose.onResults(results => {
     const lm = getSmoothedLM(results.poseLandmarks);
     drawSkeleton(lm);
 
-    const shoulderRef = baseShoulderY || 0.35;
-
-    // ── 1. VELOCIDAD ──
-    // OPT 3: Filtro de visibilidad — solo usar landmark si es confiable
+    // Calcular smoothedDelta siempre (necesario para tutorial)
     const lAnk = lm[27], rAnk = lm[28], lSho = lm[11], rSho = lm[12];
     const ankVis = ((lAnk.visibility||0) + (rAnk.visibility||0)) / 2;
     const shoVis = ((lSho.visibility||0) + (rSho.visibility||0)) / 2;
@@ -898,81 +1083,139 @@ pose.onResults(results => {
     const shoulderY= shoVis > VIS_THRESHOLD ? (lSho.y + rSho.y) / 2 : lastShoulderY;
 
     let rawDelta = 0;
-    if (lastAnkleY    !== 0) rawDelta += Math.abs(ankleY    - lastAnkleY)    * 1.5;
-    if (lastShoulderY !== 0) rawDelta += Math.abs(shoulderY - lastShoulderY) * 1.2;
+    if (gameMode === 'sitting') {
+        // Sentado: mover los hombros arriba/abajo para correr
+        if (lastShoulderY !== 0 && shoVis > VIS_THRESHOLD) {
+            rawDelta += Math.abs(shoulderY - lastShoulderY) * 4.0;
+        }
+    } else {
+        if (lastAnkleY    !== 0) rawDelta += Math.abs(ankleY    - lastAnkleY)    * 1.5;
+        if (lastShoulderY !== 0) rawDelta += Math.abs(shoulderY - lastShoulderY) * 1.2;
+    }
     smoothedDelta = smoothedDelta * 0.75 + rawDelta * 0.25;
     lastAnkleY    = ankleY;
     lastShoulderY = shoulderY;
 
     // Tutorial: procesar con smoothedDelta ya calculado
     if (isTutorialActive) { processTutorialDetection(lm, smoothedDelta); return; }
-    if (!isGameStarted || isGameOver) return;
 
+    // ── GUARD: solo procesar movimientos si el juego está activo ──
+    if (!isGameStarted || isGameOver || isPaused) return;
+
+    const shoulderRef = baseShoulderY || 0.35;
+
+    // ── 1. VELOCIDAD — solo sube corriendo, no al saltar ni golpear ──
     const maxSpd  = activePowerups.speed > Date.now() ? 18 : 12;
     const spdMult = activePowerups.speed > Date.now() ? 16 : 12;
+    const isActing = player.isJumping || isKicking || isPunching;
 
-    // OPT 4: Usar noiseFloor dinámico en vez de 0.005 fijo
-    if (smoothedDelta > noiseFloor) {
+    if (smoothedDelta > noiseFloor && !isActing) {
+        // Solo corre si no está saltando ni golpeando
         speed = Math.min(speed + smoothedDelta * spdMult, maxSpd);
-        if (!isKicking && !isPunching && !player.isJumping && !isCrouching) {
-            const lv = Math.min(Math.floor(speed/maxSpd*3), 2);
-            updateMoveIndicator(["🏃 ¡Corriendo!","🏃 ¡Más rápido!","💨 ¡TURBO!"][lv], true);
-        }
-    } else {
+        const lv = Math.min(Math.floor(speed/maxSpd*3), 2);
+        const labels = gameMode==='sitting'
+            ? ["🪑 ¡Mové los hombros!","🪑 ¡Más rápido!","💨 ¡TURBO!"]
+            : ["🏃 ¡Corriendo!","🏃 ¡Más rápido!","💨 ¡TURBO!"];
+        if (!isCrouching) updateMoveIndicator(labels[lv], true);
+    } else if (!isActing) {
+        // Solo frena si no está en acción
         speed *= 0.75;
         if (speed < 0.1) speed = 0;
         smoothedDelta = 0;
-        if (!isKicking && !isPunching && !player.isJumping && !isCrouching) {
-            updateMoveIndicator("🧍 Quieto — ¡Movete!", false);
-        }
+        if (!isCrouching) updateMoveIndicator(gameMode==='sitting' ? "🪑 Quieto — ¡Mové los hombros!" : "🧍 Quieto — ¡Movete!", false);
     }
+    // Cuando salta o golpea: mantiene la velocidad actual sin modificarla
     speedFill.style.height = Math.min(speed/maxSpd*100, 100) + '%';
+
     const now = Date.now();
 
-    // ── 2. AGACHARSE ──
-    const shoulderDrop = shoulderY - shoulderRef;
-    if (shoulderDrop > 0.10 && !isCrouching && now - lastCrouchTime > 500) {
-        isCrouching = true;
-        lastCrouchTime = now;
-        updateMoveIndicator("⬇️ ¡Agachado!", true);
-    } else if (shoulderDrop < 0.05 && isCrouching) {
-        isCrouching = false;
+    // ── 2. AGACHARSE — se activa al bajar y se libera automáticamente a los 800ms ──
+    if (gameMode === 'standing') {
+        const shoulderDrop = shoulderY - shoulderRef;
+        if (shoulderDrop > 0.15 && !isCrouching && now - lastCrouchTime > 900) {
+            isCrouching = true; lastCrouchTime = now;
+            updateMoveIndicator("⬇️ ¡Agachado!", true);
+            setTimeout(() => { isCrouching = false; }, 800);
+        }
+    } else {
+        const noseY  = lm[0].y;
+        const noseRef= baseHipY ? baseHipY - 0.45 : 0.15;
+        const lean   = noseY - noseRef;
+        if (lean > 0.12 && !isCrouching && now - lastCrouchTime > 900) {
+            isCrouching = true; lastCrouchTime = now;
+            updateMoveIndicator("⬇️ ¡Inclinado!", true);
+            setTimeout(() => { isCrouching = false; }, 800);
+        }
     }
 
     // ── 3. SALTO ──
-    const kneeY       = (lm[25].y + lm[26].y) / 2;
-    const compression = kneeY - shoulderY;
-    if (compression < 0.28 && canJump && !player.isJumping) {
-        player.vy = -20; player.isJumping = true; canJump = false; statJumps++;
-        sfxJump();
-        updateMoveIndicator("⬆️ ¡Salto!", true);
+    if (gameMode === 'standing') {
+        const kneeY       = (lm[25].y + lm[26].y) / 2;
+        const compression = kneeY - shoulderY;
+        if (compression < 0.24 && canJump && !player.isJumping) {  // era 0.28 (más exigente)
+            player.vy = -20; player.isJumping = true; canJump = false; statJumps++;
+            sfxJump(); updateMoveIndicator("⬆️ ¡Salto!", true);
+        }
+        if (compression < 0.20 && player.isJumping && !hasDoubleJumped && activePowerups.doubleJump > now) {
+            player.vy = -18; hasDoubleJumped = true;
+            sfxJump(); spawnParticles(player.x, player.y, '#a78bfa', 12);
+            updateMoveIndicator("🪂 ¡DOBLE SALTO!", true);
+        }
+        if (compression > 0.35) { canJump = true; hasDoubleJumped = false; }  // era 0.32
+    } else {
+        const lWrist = lm[15], rWrist = lm[16], lElbow = lm[13], rElbow = lm[14];
+        const wVis = ((lWrist.visibility||0)+(rWrist.visibility||0))/2;
+        let flying = false;
+        if (wVis > VIS_THRESHOLD) {
+            const lSpread = lElbow.x - lWrist.x;
+            const rSpread = rWrist.x - rElbow.x;
+            flying = lSpread > 0.12 && rSpread > 0.12;  // era 0.08 (más exigente)
+        }
+        if (flying && canJump && !player.isJumping) {
+            player.vy = -20; player.isJumping = true; canJump = false; statJumps++;
+            sfxJump(); updateMoveIndicator("🦅 ¡Salto!", true);
+        }
+        if (!flying) { canJump = true; hasDoubleJumped = false; }
     }
-    if (compression < 0.22 && player.isJumping && !hasDoubleJumped && activePowerups.doubleJump > now) {
-        player.vy = -18; hasDoubleJumped = true;
-        sfxJump();
-        spawnParticles(player.x, player.y, '#a78bfa', 12);
-        updateMoveIndicator("🪂 ¡DOBLE SALTO!", true);
-    }
-    if (compression > 0.32) { canJump = true; hasDoubleJumped = false; }
 
-    // ── 4. PATADA — OPT 3: solo si rodillas visibles ──
-    const lKnee = lm[25], rKnee = lm[26], lHip = lm[23], rHip = lm[24];
-    if ((lKnee.visibility||0) > VIS_THRESHOLD || (rKnee.visibility||0) > VIS_THRESHOLD) {
-        const lKneeLift = lHip.y - lKnee.y;
-        const rKneeLift = rHip.y - rKnee.y;
-        if ((lKneeLift > 0.12 || rKneeLift > 0.12) && now - lastKickTime > 800) {
+    // Pre-calcular isFlying (usado tanto en kick como en punch sentado)
+    const lWristF = lm[15], rWristF = lm[16], lElbowF = lm[13], rElbowF = lm[14];
+    const wVisF = ((lWristF.visibility||0)+(rWristF.visibility||0))/2;
+    const isFlying = gameMode==='sitting' && wVisF > VIS_THRESHOLD
+        && (lElbowF.x - lWristF.x) > 0.12 && (rWristF.x - rElbowF.x) > 0.12;  // era 0.08
+
+    // ── 4. KICK / MANO ARRIBA ──
+    if (gameMode === 'sitting') {
+        const lWristK = lm[15], rWristK = lm[16];
+        const sYK = shoulderY || baseShoulderY || 0.35;
+        const lHandUp = (lWristK.visibility||0) > VIS_THRESHOLD && lWristK.y < sYK - 0.13;  // era 0.08
+        const rHandUp = (rWristK.visibility||0) > VIS_THRESHOLD && rWristK.y < sYK - 0.13;
+        const bothUp  = lHandUp && rHandUp;
+        if ((lHandUp || rHandUp) && !bothUp && !isFlying && now - lastKickTime > 1000) {  // era 800ms
             lastKickTime = now;
             triggerKick();
-            updateMoveIndicator("🦶 ¡PATADA!", true);
+            updateMoveIndicator("✋ ¡MANO ARRIBA!", true);
+        }
+    } else {
+        const lKnee = lm[25], rKnee = lm[26], lHip = lm[23], rHip = lm[24];
+        if ((lKnee.visibility||0) > VIS_THRESHOLD || (rKnee.visibility||0) > VIS_THRESHOLD) {
+            const lKneeLift = lHip.y - lKnee.y;
+            const rKneeLift = rHip.y - rKnee.y;
+            if ((lKneeLift > 0.18 || rKneeLift > 0.18) && now - lastKickTime > 1000) {  // era 0.12, 800ms
+                lastKickTime = now;
+                triggerKick();
+                updateMoveIndicator("🦶 ¡PATADA!", true);
+            }
         }
     }
 
-    // ── 5. PUÑETAZO — OPT 3: solo si muñecas visibles ──
+    // ── 5. PUÑETAZO ──
     const lWrist = lm[15], rWrist = lm[16], lElbow = lm[13], rElbow = lm[14];
+    const safeShoulderY = shoulderY || baseShoulderY || 0.35;
     if ((lWrist.visibility||0) > VIS_THRESHOLD || (rWrist.visibility||0) > VIS_THRESHOLD) {
         const lArmExt = lElbow.y - lWrist.y;
         const rArmExt = rElbow.y - rWrist.y;
-        if ((lArmExt > 0.15 || rArmExt > 0.15) && now - lastPunchTime > 800) {
+        if ((lArmExt > 0.20 || rArmExt > 0.20) && now - lastPunchTime > 1000 && !isFlying) {  // era 0.15, 800ms
             lastPunchTime = now;
             triggerPunch();
             updateMoveIndicator("👊 ¡PUÑETAZO!", true);
@@ -986,35 +1229,50 @@ function updateMoveIndicator(text, active) {
 }
 
 // ─────────────────────────────────────────────
-// CÁMARA — OPT 2: 320x240 + throttle a 20fps para MediaPipe
-// El juego visual sigue corriendo a 60fps sin cambios
+// CÁMARA — loop manual a 20fps
 // ─────────────────────────────────────────────
-let lastPoseTime   = 0;
-const POSE_INTERVAL = 50; // ms → 20fps para MediaPipe
+let poseLoopActive = false;
 
-const camera = new Camera(video, {
-    onFrame: async () => {
-        const now = performance.now();
-        if (now - lastPoseTime < POSE_INTERVAL) return; // throttle
-        lastPoseTime = now;
-        await pose.send({ image: video });
-    },
-    width: 320,   // OPT 2: resolución reducida (antes 640)
-    height: 240   // OPT 2: resolución reducida (antes 480)
-});
+async function poseLoop() {
+    if (!poseLoopActive) return;
+    if (video.readyState >= 2) {
+        await pose.send({ image: video }).catch(()=>{});
+    }
+    setTimeout(poseLoop, 50); // 20fps
+}
 
 btnComenzar.onclick = async () => {
     startScreen.style.display = 'none';
     loading.style.display = 'flex';
+    loadStatus.textContent = 'Solicitando permiso de cámara...';
+
+    let stream;
     try {
-        await camera.start();
-        video.play();
+        stream = await navigator.mediaDevices.getUserMedia({
+            video: { width:320, height:240, facingMode:'user' },
+            audio: false
+        });
     } catch(e) {
-        alert("No se pudo acceder a la cámara. Asegurate de dar los permisos.");
+        loadStatus.textContent = e.name === 'NotAllowedError'
+            ? '❌ Permiso denegado — habilitá la cámara en el navegador y recargá'
+            : '❌ Error: ' + e.message;
         return;
     }
-    renderSkinGrid();
-    // La pantalla de skins se muestra cuando la IA carga (en pose.onResults)
+
+    video.srcObject = stream;
+    await video.play().catch(()=>{});
+    loadStatus.textContent = '✅ Cámara activa — cargando IA...';
+
+    // Iniciar loop permanente de detección
+    poseLoopActive = true;
+    poseLoop();
+
+    // Timeout de 20s si MediaPipe no responde
+    window._loadTimeout = setTimeout(() => {
+        if (!iaLoaded) {
+            loadStatus.textContent = '⚠️ La IA tardó demasiado — verificá tu conexión y recargá';
+        }
+    }, 20000);
 };
 
 // ─────────────────────────────────────────────
@@ -1023,7 +1281,12 @@ btnComenzar.onclick = async () => {
 function startCalibration() {
     calibrating = true;
     calibSamples = [];
-    smoothedLM   = null; // resetear suavizado para calibración limpia
+    smoothedLM   = null;
+    lastWristY   = 0;
+    lastElbowY   = 0;
+    lastAnkleY   = 0;
+    lastShoulderY= 0;
+    smoothedDelta= 0;
     calibBarInner.style.width      = '0%';
     calibBarInner.style.background = '#4ade80';
     calibStatus.textContent = 'Detectando tu postura...';
@@ -1047,9 +1310,25 @@ function startCountdown() {
             moveIndicator.style.display = 'block';
             speedBarEl.style.display    = 'block';
             speedLabelEl.style.display  = 'block';
+            // Resetear todos los valores de tracking para que el primer frame
+            // no genere un delta falso comparando con posiciones del tutorial/calibración
+            lastAnkleY    = 0;
+            lastShoulderY = 0;
+            lastWristY    = 0;
+            lastElbowY    = 0;
+            smoothedDelta = 0;
+            smoothedLM    = null;
             isGameStarted = true;
+            pauseBtnFloat.style.display = 'block';
             resetStats();
             startMusic();
+            // Mostrar badge de modo en UI
+            if (gameMode === 'sitting') {
+                const badge = document.createElement('div');
+                badge.style.cssText = 'position:fixed;top:22px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,0.6);border:1px solid #a78bfa;border-radius:8px;color:#a78bfa;font-size:0.75rem;font-weight:800;padding:3px 12px;z-index:1001;';
+                badge.textContent = '🪑 MODO SENTADO';
+                document.body.appendChild(badge);
+            }
         }
     }, 1000);
 }
@@ -1058,7 +1337,7 @@ function startCountdown() {
 // UPDATE
 // ─────────────────────────────────────────────
 function update() {
-    if (isGameOver || !isGameStarted) return;
+    if (isGameOver || !isGameStarted || isPaused) return;
 
     checkLevel();
     updateParticles();
@@ -1217,8 +1496,72 @@ function draw() {
     requestAnimationFrame(() => { update(); draw(); });
 }
 
+function resetGame() {
+    // Resetear estado del juego
+    isGameOver    = false;
+    isGameStarted = false;
+    isPaused      = false;
+    distance      = 0;
+    speed         = 0;
+    obstacles     = [];
+    powerups      = [];
+    particles     = [];
+    popups        = [];
+    lives         = 3;
+    isInvincible  = false;
+    isKicking     = false;
+    isPunching    = false;
+    isCrouching   = false;
+    activePowerups= { shield:0, speed:0, doubleJump:0 };
+    hasDoubleJumped=false;
+    comboState    = 0;
+    activeComboCount=0;
+    currentLevel  = 0;
+    trail         = [];
+    deathZoom     = 1.0;
+    deathZoomActive=false;
+    lastAnkleY    = 0;
+    lastShoulderY = 0;
+    lastWristY    = 0;
+    lastElbowY    = 0;
+    smoothedDelta = 0;
+    smoothedLM    = null;
+    roadOffset    = 0;
+
+    // Resetear vidas en UI
+    [1,2,3].forEach(i => {
+        const h = document.getElementById('h'+i);
+        h.style.opacity = '1';
+        h.style.filter  = 'drop-shadow(0 0 5px rgba(255,0,0,0.5))';
+    });
+
+    // Ocultar pantallas de fin
+    gameOverEl.style.display     = 'none';
+    pauseScreen.style.display    = 'none';
+    pauseBtnFloat.style.display  = 'none';
+    moveIndicator.style.display  = 'none';
+    speedBarEl.style.display     = 'none';
+    speedLabelEl.style.display   = 'none';
+    comboCounter.style.display   = 'none';
+    deathOverlay.style.display   = 'none';
+    newRecordMsg.style.display   = 'none';
+    unlockBanner.style.display   = 'none';
+    powerupBar.innerHTML         = '';
+    ui.style.display             = 'none';
+
+    // Reiniciar ambiente
+    initEnvironment();
+    stopMusic();
+
+    // Ir directo a selector de skins (cámara ya activa)
+    renderSkinGrid();
+    skinScreen.style.display = 'flex';
+}
+
 function endGame() {
     isGameOver = true;
+    pauseBtnFloat.style.display = 'none';
+    pauseScreen.style.display   = 'none';
     stopMusic(); sfxDeath();
     moveIndicator.style.display = 'none';
     speedBarEl.style.display    = 'none';
@@ -1317,6 +1660,13 @@ function drawWeather() {
 // ─────────────────────────────────────────────
 // ARRANQUE
 // ─────────────────────────────────────────────
+window.addEventListener('keydown', e => {
+    if ((e.key === 'Escape' || e.key === ' ') && isGameStarted && !isGameOver) {
+        e.preventDefault();
+        togglePause();
+    }
+});
+
 window.addEventListener('resize', init);
 init();
 draw();
